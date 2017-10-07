@@ -1,7 +1,6 @@
 require "demiurge/createjs/version"
 
 require "demiurge/createjs/websocket"
-require "demiurge/createjs/tmx_support"
 require "demiurge/createjs/transport"
 
 require "demiurge/createjs/zone"
