@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Demiurge-Createjs Example Client</title>
+
+  <script src="/scripts/vendor/createjs-2015.05.21.min.js"></script>
+  <script src="/scripts/vendor/jquery-2.0.3.min.js"></script>
+  <script src="/scripts/dcjs.js"></script>
+  <script src="/scripts/dcjs_websocket.js"></script>
+  <script src="/scripts/dcjs_createjs.js"></script>
+  <script src="/scripts/dcjs_createjs_loader.js"></script>
+  <script src="/scripts/dcjs_createjs_spritesheet.js"></script>
+  <script src="/scripts/dcjs_createjs_spritestack.js"></script>
+
+</head>
+<body>
+
+<script>
+//<![CDATA[
+
+  $(function(){
+    if(!("WebSocket" in window)) {
+      alert("Sorry, your browser does not appear to support WebSockets. Please use latest version of your browser, and not any version of Opera Mini.");
+      return;
+    }
+
+    window.dcjs_game = new DCJS();
+    // If necessary, change "3001" to the appropriate port number!
+    ws = new WebSocket("ws://localhost:3001/");
+    dcjs_game.setTransport("websocket", ws);
+    dcjs_game.setDisplay("createjs");
+
+    dcjs_game.setup();
+  });
+
+//]]>
+</script>
+<div id="loader" class="loader"></div>
+
+<h1>Map View</h1>
+
+<canvas id="displayCanvas" width="640"
+        height="480"></canvas>
+
+</body>
+</html>
