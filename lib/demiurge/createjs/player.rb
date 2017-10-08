@@ -50,6 +50,9 @@ class Demiurge::Createjs::Player
 
   # Move to a location on the current spritestack
   def teleport_to_tile(x, y, options = {})
+    pan_offset_x, pan_offset_y = pan_offset_for_center_tile(x, y)
+    send_pan_to_pixel_offset(x, y, options)
+
     pixel_x = x * @zone.spritesheet[:tilewidth]
     pixel_y = y * @zone.spritesheet[:tileheight]
     message "displayTeleportStackToPixel", "#{@name}_stack", pixel_x, pixel_y, options
@@ -69,7 +72,7 @@ class Demiurge::Createjs::Player
   # Pan the display to a pixel offset (upper-left corner) in the current spritestack
   def send_pan_to_pixel_offset(x, y, options = {})
     @pan_counter += 1
-    message "displayPanStackToPixel", @zone.spritestack["name"], x, y, options
+    message "displayPanStackToPixel", @zone.spritestack[:name], x, y, options
     message "displayPanStackToPixel", @humanoid.stack_name, x, y, options
   end
 
