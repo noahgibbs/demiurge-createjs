@@ -12,7 +12,6 @@ class DCJS.CreatejsDisplay.CreatejsSpriteStack
     @layer_order = []
     @width = data.width
     @height = data.height
-    # TODO: how do I map sprites to current animations here?
     @sprite_table = {}
     @sprite_ctr = 0
     @cur_cyclic_animations = {}

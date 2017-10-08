@@ -1,4 +1,7 @@
 module Demiurge::Createjs
+  def self.get_record_traffic
+    @record_traffic
+  end
 
   def self.record_traffic(record = true)
     @record_traffic = record
@@ -22,7 +25,6 @@ module Demiurge::Createjs
     ws.on :message do |event|
       File.open("incoming_traffic.json", "a") { |f| f.write event.data + "\n" } if @record_traffic
       data = MultiJson.load event.data
-      puts "Got message: #{data.inspect}"
       handle_message ws, data
     end
 
