@@ -122,7 +122,7 @@ class DCJS.CreatejsDisplay extends DCJS.Display
 
   instantPanStackToPixel: (stack, x, y) ->
     stack = @spritestacks[stack]
-    stack.setExposurePixel x: x, y: y, width: @display_width, height: @display_height
+    stack.setExposure x: x, y: y, width: @display_width, height: @display_height
 
   panStackToPixel: (stack, x, y, options) ->
     stack = @spritestacks[stack]

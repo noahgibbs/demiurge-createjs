@@ -18,7 +18,6 @@ class Demiurge::Createjs::Player
     @cur_anim = "stand"
 
     @anim_counter = 0
-    @pan_counter = 0
   end
 
   def message(*args)
@@ -55,6 +54,7 @@ class Demiurge::Createjs::Player
 
     pixel_x = x * @zone.spritesheet[:tilewidth]
     pixel_y = y * @zone.spritesheet[:tileheight]
+    # TODO: something's wrong here. How to teleport player's sprite to correct location on Zone tiles...
     message "displayTeleportStackToPixel", "#{@name}_stack", pixel_x, pixel_y, options
     @x = x
     @y = y
@@ -71,9 +71,12 @@ class Demiurge::Createjs::Player
 
   # Pan the display to a pixel offset (upper-left corner) in the current spritestack
   def send_pan_to_pixel_offset(x, y, options = {})
-    @pan_counter += 1
     message "displayPanStackToPixel", @zone.spritestack[:name], x, y, options
-    message "displayPanStackToPixel", @humanoid.stack_name, x, y, options
+  end
+
+  # Pan the display to a pixel offset (upper-left corner) in the current spritestack
+  def send_instant_pan_to_pixel_offset(x, y, options = {})
+    message "displayInstantPanStackToPixel", @zone.spritestack[:name], x, y, options
   end
 
   def pan_offset_for_center_tile(x, y)

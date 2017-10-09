@@ -31,7 +31,7 @@ class DCJS.CreatejsDisplay.CreatejsSpriteSheet
     for offset, image of @images
       if frame_num >= image.firstgid && (!@images[offset + 1]? || frame_num < @images[offset + 1].firstgid)
         return (frame_num - @images[offset].firstgid) + @images[offset].cjs_offset
-    console.warn "Can't map frame #{frame_num} into SpriteSheet!"
+    console.warn "Can't map frame #{frame_num} into SpriteSheet #{@name}!"
     undefined
 
   ss_anim_frames_to_cjs_anim_frames: (animation) ->

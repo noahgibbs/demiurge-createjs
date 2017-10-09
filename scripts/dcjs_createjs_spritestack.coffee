@@ -12,6 +12,7 @@ class DCJS.CreatejsDisplay.CreatejsSpriteStack
     @layer_order = []
     @width = data.width
     @height = data.height
+    @name = data.name
     @sprite_table = {}
     @sprite_ctr = 0
     @cur_cyclic_animations = {}
@@ -76,6 +77,10 @@ class DCJS.CreatejsDisplay.CreatejsSpriteStack
     width_tiles = end_tile_x - start_tile_x + 1
     height_tiles = end_tile_y - start_tile_y + 1
 
+    if start_tile_y > end_tile_y || start_tile_x > end_tile_x
+      console.log("Nothing being displayed: x: #{@x} y: #{@y} ex: #{@exposure.x} ey: #{@exposure.y}")
+      return
+
     for layer_name in @layer_order
       layer = @layers[layer_name]
       sprites = layer.sprites = []
@@ -93,6 +98,9 @@ class DCJS.CreatejsDisplay.CreatejsSpriteStack
             sprite.set name: name
             @sprite_table[name] = sprite
             layer.container.addChild sprite
+
+          if ld[h] is undefined
+            console.log "Illegal height: #{h} in spritesheet #{@name} in loop #{start_tile_y} -> #{end_tile_y}!"
 
           if ld[h][w] is 0
             sprite.visible = false
