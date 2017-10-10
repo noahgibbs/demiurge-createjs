@@ -17,6 +17,15 @@ class Demiurge::Createjs::Player
     @cur_direction = "right"
     @cur_anim = "stand"
 
+    # "Exposure" as understood on the client starts at 0 unless set.
+    # You can think of it as the center of the player's viewport.  The
+    # player object expects to have a location and viewport set pretty
+    # much immediately after creation, so we don't send a message for
+    # it yet.
+
+    @pan_center_x = 0
+    @pan_center_y = 0
+
     @anim_counter = 0
   end
 
@@ -71,11 +80,13 @@ class Demiurge::Createjs::Player
 
   # Pan the display to a pixel offset (upper-left corner) in the current spritestack
   def send_pan_to_pixel_offset(x, y, options = {})
+    return if x == @pan_center_x && y == @pan_center_y
     message "displayPanStackToPixel", @zone.spritestack[:name], x, y, options
   end
 
   # Pan the display to a pixel offset (upper-left corner) in the current spritestack
   def send_instant_pan_to_pixel_offset(x, y, options = {})
+    return if x == @pan_center_x && y == @pan_center_y
     message "displayInstantPanStackToPixel", @zone.spritestack[:name], x, y, options
   end
 
