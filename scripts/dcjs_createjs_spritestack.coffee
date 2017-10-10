@@ -83,7 +83,9 @@ class DCJS.CreatejsDisplay.CreatejsSpriteStack
 
     for layer_name in @layer_order
       layer = @layers[layer_name]
-      sprites = layer.sprites = []
+      if layer.sprites is undefined
+        layer.sprites = []
+      sprites = layer.sprites
       ld = layer.data
 
       for h in [start_tile_y..end_tile_y]
@@ -97,6 +99,7 @@ class DCJS.CreatejsDisplay.CreatejsSpriteStack
             sprite = sprites[h_ctr][w_ctr] = @sheet.create_sprite()
             sprite.set name: name
             @sprite_table[name] = sprite
+            sprites[h_ctr][w_ctr] = sprite
             layer.container.addChild sprite
 
           if ld[h] is undefined
