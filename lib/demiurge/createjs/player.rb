@@ -5,6 +5,9 @@ class Demiurge::Createjs::Player
   attr :transport, true
   attr :humanoid, true
 
+  attr_reader :pan_center_x
+  attr_reader :pan_center_y
+
   def initialize options
     @transport = options[:transport]
     @name = options[:name] || "player"
@@ -59,17 +62,18 @@ class Demiurge::Createjs::Player
   # Move to a location on the current spritestack
   def teleport_to_tile(x, y, options = {})
     pan_offset_x, pan_offset_y = pan_offset_for_center_tile(x, y)
-    send_pan_to_pixel_offset(x, y, options)
+    send_instant_pan_to_pixel_offset(pan_offset_x, pan_offset_y, options)
 
     pixel_x = x * @zone.spritesheet[:tilewidth]
     pixel_y = y * @zone.spritesheet[:tileheight]
-    # TODO: something's wrong here. How to teleport player's sprite to correct location on Zone tiles...
     message "displayTeleportStackToPixel", "#{@name}_stack", pixel_x, pixel_y, options
     @x = x
     @y = y
   end
 
-  # Move to a location on the current spritestack
+  # Move to a location on the current spritestack.
+  # This is a gliding motion. walk_to_tile is better
+  # for most purposes.
   def move_to_tile(x, y, options = {})
     pixel_x = x * @zone.spritesheet[:tilewidth]
     pixel_y = y * @zone.spritesheet[:tileheight]
@@ -81,41 +85,35 @@ class Demiurge::Createjs::Player
   # Pan the display to a pixel offset (upper-left corner) in the current spritestack
   def send_pan_to_pixel_offset(x, y, options = {})
     return if x == @pan_center_x && y == @pan_center_y
-    message "displayPanStackToPixel", @zone.spritestack[:name], x, y, options
+    @pan_center_x = x
+    @pan_center_y = y
+    message "displayPanToPixel", x, y, options
   end
 
   # Pan the display to a pixel offset (upper-left corner) in the current spritestack
   def send_instant_pan_to_pixel_offset(x, y, options = {})
     return if x == @pan_center_x && y == @pan_center_y
-    message "displayInstantPanStackToPixel", @zone.spritestack[:name], x, y, options
+    @pan_center_x = x
+    @pan_center_y = y
+    message "displayInstantPanToPixel", x, y, options
   end
 
   def pan_offset_for_center_tile(x, y)
     tilewidth = @zone.spritesheet[:tilewidth]
     tileheight = @zone.spritesheet[:tileheight]
-    sheetwidth = @zone.spritestack[:width] * @zone.spritesheet[:tilewidth]
-    sheetheight = @zone.spritestack[:height] * @zone.spritesheet[:tileheight]
+    stackwidth = @zone.spritestack[:width] * @zone.spritesheet[:tilewidth]
+    stackheight = @zone.spritestack[:height] * @zone.spritesheet[:tileheight]
 
     tile_center_x = x * tilewidth + tilewidth / 2
     tile_center_y = y * tileheight + tileheight / 2
 
-    upper_left_x = tile_center_x - @view_width / 2
-    upper_left_y = tile_center_y - @view_height / 2
-
-    highest_offset_x = sheetwidth - @view_width
-    highest_offset_y = sheetheight - @view_height
-
-    upper_left_x = 0 if upper_left_x < 0
-    upper_left_y = 0 if upper_left_y < 0
-    upper_left_x = highest_offset_x if upper_left_x > highest_offset_x
-    upper_left_y = highest_offset_y if upper_left_y > highest_offset_y
-
-    [upper_left_x, upper_left_y]
+    [tile_center_x, tile_center_y]
   end
 
   # This gives the pixel coordinates relative to the zone
   # spritesheet's origin for a humanoid sprite standing at the given
   # tile.
+  # Note: currently unused, as of Nov 2017
   def humanoid_coords_for_tile x, y
     tilewidth = @zone.spritesheet[:tilewidth]
     tileheight = @zone.spritesheet[:tileheight]

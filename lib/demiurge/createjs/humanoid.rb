@@ -105,6 +105,7 @@ module Demiurge::Createjs
           "data" => [ [ layer[:offset] + HUMANOID_BASE_ANIMATION["stand_down"][0] ] ],
           "visible" => true,
           "opacity" => 1.0,
+          "z" => 0.0,
         }
       end
 

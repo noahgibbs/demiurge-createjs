@@ -11,7 +11,7 @@ class window.DCJS
     if display == "createjs"
       @display = new DCJS.CreatejsDisplay(this, args...)
       return
-    throw "Unrecognized display: #{display}!"
+    throw "Unrecognized display in DCJS: #{display}!"
 
   getTransport: () -> @transport
   getDisplay: () -> @display

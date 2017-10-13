@@ -3,11 +3,9 @@ when_sheet_complete = (sheet, handler) ->
   sheet.addEventListener "complete", handler
 
 class DCJS.CreatejsDisplay.CreatejsSpriteStack
-  constructor: (@sheet, data, @exposure) ->
-    @top_container = new createjs.Container
+  constructor: (@display, @sheet, data) ->
     @x = data.x || 0
     @y = data.y || 0
-    @top_container.setTransform @x, @y
     @layers = {}
     @layer_order = []
     @width = data.width
@@ -17,20 +15,23 @@ class DCJS.CreatejsDisplay.CreatejsSpriteStack
     @sprite_ctr = 0
     @cur_cyclic_animations = {}
     @cur_played_animations = {}
+    @sheet_complete = false
 
     unless DCJS.CreatejsDisplay._cyclicTimerStart?
       DCJS.CreatejsDisplay._cyclicTimerStart = (new Date()).getTime()
 
     when_sheet_complete @sheet, () =>
+      @sheet_complete = true
       for layer in data.layers
         continue unless layer.visible
 
         @layer_order.push layer.name
         container = new createjs.Container
         container.alpha = layer.opacity
-        @top_container.addChild container
+        container.z = layer.z
+        @display.add_to_layer_container(container)
 
-        @layers[layer.name] = { sprites: [], container: container, data: layer.data }
+        @layers[layer.name] = { sprites: [], container: container, data: layer.data, z: layer.z }
 
       @handleExposure()
 
@@ -41,44 +42,99 @@ class DCJS.CreatejsDisplay.CreatejsSpriteStack
           sprite = @sprite_table[sprite_name]
           @_cyclicAnimationHandler sprite, anim
 
-  setExposure: (@exposure) ->
-    @handleExposure()
+  # The "exposure" means the window the player can see of the
+  # conceptually gigantic world.  The exposure data structure contains
+  # the center of the view (called "x" and "y") and the visible width
+  # and height. So if the player can see from 0 to 640 pixels in x and
+  # from 0 to 480 pixels in y, the structure would be { x: 320, y:
+  # 240, width: 640, height: 480 }.
+
+  # handleExposure does the appropriate transforming for this, but
+  # also makes sure we can portray the world with a reasonably small
+  # number of sprites. For instance a 640 x 480 window of 32x32
+  # sprites would be 20x15 blocks, or around 300 sprites/layer (we can
+  # actually see 21x16 when scrolling, or 336 sprites/layer.) However,
+  # if this 20x15 window was into a 2000-block by 1500-block world, we
+  # would need 3 million sprites if we kept them all around all the
+  # time. Instead, we can reuse our 336-ish sprites/layer as we move
+  # around and change what block they show to keep the total number of
+  # sprites approximately constant.
+
+  # A "zone", in local parlance, is a location which may contain
+  # multiple spritestacks. A zone isn't even required to use tiles or
+  # sprites, it could use a clickable map or a text interface or
+  # something. But a tile-based zone will normally contain at least
+  # one spritestack for the terrain, and may contain others. It's also
+  # possible for the number and type of spritestacks to change at
+  # random times - we could dynamically load a new chunk of map, add a
+  # new spritestack for an event or whatever.
+
+  # You know what's hard? Coordinate systems. Let's name some of ours
+  # to make this less overwhelmingly awful. Most of the coordinates
+  # for this are measured in whole integers.
+
+  # Screen coordinates: measured in pixels, goes from 0-639 and 0-479, or equivalent for other resolutions. Matches EaselJS coords.
+  # Screen tile coordinates: measured in tiles, goes from 0-19 and 0-14 or equivalent for other resolutions or tile sizes.
+  # Spritestack-relative coordinates: measured in pixels from the upper left corner of the spritestack.
+  # Spritestack-relative tile coordinates: measured in tiles from the upper left corner of the spritestack.
+  # Zone coordinates: measured in pixels, may be very large. A spritestack isn't required to
+  #   line up with the tile coordinates of the zone, other spritestacks or anything else, though it usually will.
+  #   Zone coordinates are used to lay out multiple sprite stacks within a single area, or just one if there's only one.
+  #   In the degenerate single-spritestack case, these are generally the same as that stack's stack-relative coordinates.
+
+  # It should be allowed for the exposure coordinates to not match the
+  # zone or spritestack coordinates in various ways - scaling,
+  # reflection and so on. But that's being left for later. However,
+  # the exposure is given in terms of the center in order to
+  # facilitate later scaling.
 
   handleExposure: () ->
-    @x = parseInt(@x)
+    return unless @sheet_complete
+    exposure = @display.exposure
+    @x = parseInt(@x)   # Upper left corner of the spritestack in zone coordinates
     @y = parseInt(@y)
-    @exposure.x = parseInt(@exposure.x)
-    @exposure.y = parseInt(@exposure.y)
-    @top_container.setTransform @x - (@exposure.x || 0), @y - (@exposure.y || 0)
+    exposure.x = parseInt(exposure.x) # Center of the screen in zone coordinates
+    exposure.y = parseInt(exposure.y)
 
-    height = Math.min @exposure.height, @height
-    width = Math.min @exposure.width, @width
+    # Calculate upper-left and lower-right corner of the screen in zone coordinates
+    exp_start_x = exposure.x - @display.display_width / 2
+    exp_start_y = exposure.y - @display.display_height / 2
+    exp_end_x = exposure.x + @display.display_width / 2
+    exp_end_y = exposure.y + @display.display_height / 2
 
-    # Offsets of lowest visible tile
-    start_tile_x = parseInt((@exposure.x - @x) / @sheet.tilewidth)
+    for layer_name in @layer_order
+      layer = @layers[layer_name]
+      layer.container.setTransform @x - exp_start_x, @y - exp_start_y
+
+    # Spritestack-relative tile coordinates of lowest visible tile
+    start_tile_x = parseInt((exp_start_x - @x) / @sheet.tilewidth)
     start_tile_x = Math.max(start_tile_x, 0)
-    start_tile_y = parseInt((@exposure.y - @y) / @sheet.tileheight)
+    start_tile_y = parseInt((exp_start_y - @y) / @sheet.tileheight)
     start_tile_y = Math.max(start_tile_y, 0)
 
-    if start_tile_x == @last_start_tile_x && start_tile_y == @last_start_tile_y
+    # Offset of highest visible tile
+    end_tile_x = parseInt((exp_start_x - @x + exposure.width + @sheet.tilewidth - 1) / @sheet.tilewidth)
+    end_tile_x = Math.min(end_tile_x, @width - 1)
+    end_tile_y = parseInt((exp_start_y - @y + exposure.height + @sheet.tileheight - 1) / @sheet.tileheight)
+    end_tile_y = Math.min(end_tile_y, @height - 1)
+
+    # If the tiling starts at the same x and y location, we've already adjusted all the sprites
+    # for visibility. We're cool. Return.
+    if start_tile_x == @last_start_tile_x && start_tile_y == @last_start_tile_y && end_tile_x == @last_end_tile_x && end_tile_y == @last_end_tile_y
       return
     @last_start_tile_x = start_tile_x
     @last_start_tile_y = start_tile_y
-
-    # Offsets of highest visible tile
-    end_tile_x = parseInt((@exposure.x - @x + @exposure.width + @sheet.tilewidth - 1) / @sheet.tilewidth)
-    end_tile_x = Math.min(end_tile_x, @width - 1)
-    end_tile_y = parseInt((@exposure.y - @y + @exposure.height + @sheet.tileheight - 1) / @sheet.tileheight)
-    end_tile_y = Math.min(end_tile_y, @height - 1)
     @last_end_tile_x = end_tile_x
     @last_end_tile_y = end_tile_y
+
+    console.log "HandleExposureReal #{@name}: Exposure: #{exposure.x}, #{exposure.y}, #{exposure.width}x#{exposure.height}; x: #{@x} y: #{@y}, ExpStart: #{exp_start_x}, #{exp_start_y} End: #{exp_end_x}, #{exp_end_y}; StartTile: #{start_tile_x}, #{start_tile_y}; EndTile: #{end_tile_x}, #{end_tile_y}"
 
     # How many tiles high and wide might be exposed at most?
     width_tiles = end_tile_x - start_tile_x + 1
     height_tiles = end_tile_y - start_tile_y + 1
 
     if start_tile_y > end_tile_y || start_tile_x > end_tile_x
-      console.log("Nothing being displayed: x: #{@x} y: #{@y} ex: #{@exposure.x} ey: #{@exposure.y}")
+      console.log("Nothing being displayed: x: #{@x} y: #{@y} ex: #{exposure.x} ey: #{exposure.y}")
       return
 
     for layer_name in @layer_order
@@ -112,9 +168,6 @@ class DCJS.CreatejsDisplay.CreatejsSpriteStack
             sprite.setTransform w * @sheet.tilewidth, h * @sheet.tileheight
             sprite.gotoAndStop @sheet.ss_frame_to_cjs_frame ld[h][w]
           @_setCyclicAnimationHandler(sprite, @sheet.ss_frame_to_cjs_frame(ld[h][w]), h, w)
-
-  addToStage: (stage) ->
-    stage.addChild @top_container
 
   animateTile: (layer_name, h, w, anim) ->
     when_sheet_complete @sheet, () =>
@@ -186,16 +239,3 @@ class DCJS.CreatejsDisplay.CreatejsSpriteStack
         .call (tween) =>  # on complete, set new @x and @y
           @x = x
           @y = y
-
-  panToExposurePixel: (new_exp_x, new_exp_y, opts) ->
-    duration = opts.duration || 1.0
-    when_sheet_complete @sheet, () =>
-      createjs.Tween.get(@exposure)
-        .to({x: new_exp_x, y: new_exp_y}, duration * 1000.0, createjs.Ease.linear)
-        .addEventListener("change", () => @handleExposure())
-        .call (tween) =>
-          @exposure.x = new_exp_x
-          @exposure.y = new_exp_y
-
-  panToExposure: (new_exp_x, new_exp_y, opts) ->
-    @panToExposurePixel new_exp_x * @sheet.tilewidth, new_exp_y * @sheet.tileheight, opts

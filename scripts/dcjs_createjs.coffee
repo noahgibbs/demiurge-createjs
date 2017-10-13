@@ -8,26 +8,53 @@ messageMap = {
   "displayTeleportStackTo": "teleportStackTo",
   "displayMoveStackToPixel": "moveStackToPixel",
   "displayTeleportStackToPixel": "teleportStackToPixel",
-  "displayInstantPanStackToPixel": "instantPanStackToPixel",
-  "displayPanStackToPixel": "panStackToPixel",
+  "displayInstantPanToPixel": "instantPanToPixel",
+  "displayPanToPixel": "panToPixel",
 }
 
 class DCJS.CreatejsDisplay extends DCJS.Display
-  constructor: (@dcjs) ->
+  constructor: (@dcjs, options = {}) ->
     @spritesheets = {}
     @spritestacks = {}
-  setup: () ->
-    # New displayCanvas, new stage
-    @stage = new createjs.Stage "displayCanvas"
-    @overlay_container = new createjs.Container
-    @stage.addChild(window.overlay_container)
 
-    @display_width = 640
-    @display_height = 480
+    @canvas = options["canvas"] || "displayCanvas"
+    @display_width = $("#" + @canvas)[0].width
+    @display_height = $("#" + @canvas)[0].height
+
+    @exposure = { x: 0, y: 0, width: @display_width, height: @display_height }
+
+  setup: () ->
+    @stage = new createjs.Stage @canvas
+    @layer_container = new createjs.Container
+    @stage.addChild(@layer_container)
+    @fringe_container = new createjs.Container
+    @fringe_container.z = 0.0
+    @layer_container.addChild(@fringe_container)
 
     createjs.Ticker.timingMode = createjs.Ticker.RAF
     createjs.Ticker.addEventListener "tick", (event) =>
       @stage.update event
+
+  add_to_layer_container: (container) ->
+    @layer_container.addChild(container)
+    @sort_layer_container()   # TODO: just add this one child in sorted order
+
+  add_to_fringe_container: (item) ->
+    @fringe_container.addChild(item)
+    @sort_fringe_container()   # TODO: just add this one child in sorted order
+
+  sort_layer_container: () ->
+    cur = this
+    sf = (obj1, obj2) -> cur.spaceship(obj1.z, obj2.z)
+    @layer_container.sortChildren(sf)
+
+  sort_fringe_container: () ->
+    cur = this
+    sf = (obj1, obj2) ->
+      y1 = if obj1.y then obj1.y else 0.0
+      y2 = if obj2.y then obj2.y else 0.0
+      cur.spaceship(y1, y2)
+    @fringe_container.sortChildren(sf)
 
   # TODO: Figure out how to expose CreateJS events:
   #   complete  (everything complete)
@@ -87,10 +114,8 @@ class DCJS.CreatejsDisplay extends DCJS.Display
       console.warn "Can't find spritesheet #{data.spritesheet} for sprite #{data.name}!"
       return
 
-    exposure = { x: 0, y: 0, width: @display_width, height: @display_height }
-    stack = new DCJS.CreatejsDisplay.CreatejsSpriteStack(sheet, data, exposure)
+    stack = new DCJS.CreatejsDisplay.CreatejsSpriteStack(this, sheet, data)
     @spritestacks[data.name] = stack
-    stack.addToStage(@stage)
 
   startAnimation: (data) ->
     stack = @spritestacks[data.stack]
@@ -112,18 +137,24 @@ class DCJS.CreatejsDisplay extends DCJS.Display
     stack = @spritestacks[stack]
     stack.moveToPixel x, y, duration: options.duration || 1.0
 
-  instantPanStackTo: (stack, x, y) ->
-    stack = @spritestacks[stack]
-    stack.setExposure x: x, y: y, width: @display_width, height: @display_height
+  instantPanToPixel: (x, y) ->
+    @exposure = { x: x, y: y, width: @display_width, height: @display_height }
 
-  panStackTo: (stack, x, y, options) ->
-    stack = @spritestacks[stack]
-    stack.panToExposure x, y, duration: options.duration || 1.0
+  panToPixel: (new_exp_x, new_exp_y, options) ->
+    duration = options.duration || 1.0
+    createjs.Tween.get(@exposure)
+      .to({x: new_exp_x, y: new_exp_y}, duration * 1000.0, createjs.Ease.linear)
+      .addEventListener "change", () =>
+        for name, stack of @spritestacks
+          stack.handleExposure()
+      .call (tween) =>
+        @exposure.x = new_exp_x
+        @exposure.y = new_exp_y
 
-  instantPanStackToPixel: (stack, x, y) ->
-    stack = @spritestacks[stack]
-    stack.setExposure x: x, y: y, width: @display_width, height: @display_height
-
-  panStackToPixel: (stack, x, y, options) ->
-    stack = @spritestacks[stack]
-    stack.panToExposurePixel x, y, duration: options.duration || 1.0
+  spaceship: (o1, o2) ->
+    if o1 > o2
+      1
+    else if o2 > o1
+      -1
+    else
+      0
