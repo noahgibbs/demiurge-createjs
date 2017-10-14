@@ -127,8 +127,6 @@ class DCJS.CreatejsDisplay.CreatejsSpriteStack
     @last_end_tile_x = end_tile_x
     @last_end_tile_y = end_tile_y
 
-    console.log "HandleExposureReal #{@name}: Exposure: #{exposure.x}, #{exposure.y}, #{exposure.width}x#{exposure.height}; x: #{@x} y: #{@y}, ExpStart: #{exp_start_x}, #{exp_start_y} End: #{exp_end_x}, #{exp_end_y}; StartTile: #{start_tile_x}, #{start_tile_y}; EndTile: #{end_tile_x}, #{end_tile_y}"
-
     # How many tiles high and wide might be exposed at most?
     width_tiles = end_tile_x - start_tile_x + 1
     height_tiles = end_tile_y - start_tile_y + 1

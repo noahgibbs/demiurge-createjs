@@ -6,6 +6,17 @@ class DCJS.CreatejsDisplay.CreatejsSpriteSheet
     images = (image.image for image in @images)
     DCJS.CreatejsDisplay.loader.addHandler () => @imagesLoaded()
     DCJS.CreatejsDisplay.loader.addImages images
+
+    if @images[0].frame_definitions?
+      # TODO: verify that all GIDs are consecutive in frame definitions
+      @frame_definitions = []
+      for image, i in @images
+        # For oversize tiles, make sure their bottom left corner winds up in the right spot via reg_y param
+        image_fds = ([ fd.x, fd.y, fd.width, fd.height, i, 0, fd.height - @tileheight ] for fd in image.frame_definitions)
+        @frame_definitions = @frame_definitions.concat(image_fds)
+    else
+      @frame_definitions = { width: @tilewidth, height:  @tileheight }
+
     @loaded = false
     @handlers = {}
 
@@ -93,7 +104,7 @@ class DCJS.CreatejsDisplay.CreatejsSpriteSheet
       new_num = @ss_frame_to_cjs_frame tile_num
       @cyclic_animations["tile_anim_#{new_num}"] = @ss_cyclic_anim_to_dcjs_cyclic_anim(animation)
 
-    @sheet = new createjs.SpriteSheet frames: { width: @tilewidth, height:  @tileheight }, images: images, animations: @cjs_animations
+    @sheet = new createjs.SpriteSheet frames: @frame_definitions, images: images, animations: @cjs_animations
 
     @loaded = true
     e = { name: "complete", source: this }
