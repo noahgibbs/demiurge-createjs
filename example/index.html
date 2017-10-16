@@ -3,8 +3,8 @@
 <head>
   <title>Demiurge-Createjs Example Client</title>
 
-  <script src="/scripts/vendor/createjs-2015.05.21.min.js"></script>
-  <script src="/scripts/vendor/jquery-2.0.3.min.js"></script>
+  <script src="/vendor_js/createjs-2015.05.21.min.js"></script>
+  <script src="/vendor_js/jquery-2.0.3.min.js"></script>
   <script src="/scripts/dcjs.js"></script>
   <script src="/scripts/dcjs_websocket.js"></script>
   <script src="/scripts/dcjs_createjs.js"></script>
@@ -28,7 +28,7 @@
     // If necessary, change "3001" to the appropriate port number!
     ws = new WebSocket("ws://localhost:3001/");
     dcjs_game.setTransport("websocket", ws);
-    dcjs_game.setDisplay("createjs");
+    dcjs_game.setDisplay("createjs", { canvas: "displayCanvas" });
 
     dcjs_game.setup();
   });
@@ -36,8 +36,6 @@
 //]]>
 </script>
 <div id="loader" class="loader"></div>
-
-<h1>Map View</h1>
 
 <canvas id="displayCanvas" width="640"
         height="480"></canvas>
