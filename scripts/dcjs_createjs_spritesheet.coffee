@@ -83,7 +83,6 @@ class DCJS.CreatejsDisplay.CreatejsSpriteSheet
       image.loaded_dom = DCJS.CreatejsDisplay.loader.getImage image.image
 
       # Figure out how many frames CreateJS will extract from this image
-      # TODO: do we need margins or spacing?
       padded_width = parseInt(image.loaded_dom.width) + @tilewidth - 1
       padded_height = parseInt(image.loaded_dom.height) + @tileheight - 1
       cjs_width = parseInt(padded_width / @tilewidth)

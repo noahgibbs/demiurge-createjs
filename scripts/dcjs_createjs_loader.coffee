@@ -4,7 +4,6 @@ loader.handlers = []
 
 loader.init = () ->
   return if loader.initialized
-  # TODO: experiment with LoadQueue's CORS settings on constructor
   # TODO: for lots of loading, see if multi-connection XHR is better/faster
   loader.queue = new createjs.LoadQueue(false)  # False to recommend tag (DOM) loading rather than XHR
   loader.queue.addEventListener "complete", loader.imagesLoaded
