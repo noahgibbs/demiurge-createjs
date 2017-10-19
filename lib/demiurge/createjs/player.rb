@@ -1,9 +1,9 @@
 class Demiurge::Createjs::Player
-  attr :zone, true
-  attr :x, true
-  attr :y, true
-  attr :transport, true
-  attr :humanoid, true
+  attr_reader :zone
+  attr_reader :x
+  attr_reader :y
+  attr_reader :transport
+  attr_reader :humanoid
 
   attr_reader :pan_center_x
   attr_reader :pan_center_y
@@ -57,6 +57,10 @@ class Demiurge::Createjs::Player
       }
       message "displayStartAnimation", anim_msg
     end
+  end
+
+  def move_to_zone(zone)
+    @zone = zone
   end
 
   # Move to a location on the current spritestack
