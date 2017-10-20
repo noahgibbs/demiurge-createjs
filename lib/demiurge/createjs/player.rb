@@ -8,15 +8,17 @@ class Demiurge::Createjs::Player
   attr_reader :pan_center_x
   attr_reader :pan_center_y
 
-  def initialize options
-    @transport = options[:transport]
-    @name = options[:name] || "player"
+  def initialize(transport:, name: "player", width: 640, height: 480, zone: nil, engine:)
+    @transport = transport
+    @zone = zone
+    @engine = engine
+    @name = name
     @layers = [ "skeleton", "kettle_hat_male" ]
     @humanoid = Demiurge::Createjs::ManaHumanoid.new @name, @layers, "png"
     @x = 0
     @y = 0
-    @view_width = options[:width] || 640
-    @view_height = options[:height] || 480
+    @view_width = width
+    @view_height = height
     @cur_direction = "right"
     @cur_anim = "stand"
 
@@ -34,6 +36,11 @@ class Demiurge::Createjs::Player
 
   def message(*args)
     @transport.game_message *args
+  end
+
+  # This is a notification from Demiurge
+  def notification(data)
+    self.message "simNotification", data
   end
 
   def display
