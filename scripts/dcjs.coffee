@@ -2,16 +2,12 @@
 # the app and local UI and whatever else is necessary.
 
 class window.DCJS
-  setTransport: (transport, args...) ->
-    if transport == "websocket"
-      @transport = new DCJS.WebsocketTransport(this, args...)
-      return
-    throw "Unrecognized transport: #{transport}!"
-  setDisplay: (display, args...) ->
-    if display == "createjs"
-      @display = new DCJS.CreatejsDisplay(this, args...)
-      return
-    throw "Unrecognized display in DCJS: #{display}!"
+  setTransport: (transport) ->
+    @transport = transport
+  setDisplay: (display) ->
+    @display = display
+  setSimulation: (simulation) ->
+    @simulation = simulation
 
   getTransport: () -> @transport
   getDisplay: () -> @display
@@ -20,6 +16,7 @@ class window.DCJS
     @transport.setHandler (msgName, args) -> dcjs_obj.gotTransportCall(msgName, args)
     @transport.setup()
     @display.setup()
+    @simulation.setup()
 
   gotTransportCall: (msgName, args) ->
     if msgName == "start"
@@ -27,7 +24,10 @@ class window.DCJS
       return
 
     if msgName.slice(0, 7) == "display"
-      return @getDisplay().message(msgName, args)
+      return @display.message(msgName, args)
+
+    if msgName.slice(0,3) == "sim"
+      return @simulation.message(msgName, args)
 
     console.warn "Unknown message name: #{msgName}, args: #{args}"
 
@@ -51,3 +51,14 @@ class DCJS.Display
   constructor: (@dcjs) ->
   setup: () ->
   message: (messageType, argArray) ->
+
+class DCJS.Simulation
+  constructor: (@dcjs) ->
+  setup: () ->
+  message: (messageType, argArray) ->
+    if messageType == "simNotification"
+      @notification(argArray[0])
+    else
+      console.warn "Unknown simulation message type: #{messageType}!"
+  notification: (data) ->
+    console.log "Implement a DCJS.Simulation subclass to do something with your notifications!"
