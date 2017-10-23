@@ -19,7 +19,7 @@ module Demiurge::Createjs
     ws.on :open do |event|
       puts "Socket open"
       ws.send Demiurge::Createjs.websocket_game_message("start")
-      @app.on_open(transport: ws) if @app && @app.respond_to?(:on_open)
+      @app.on_open(transport: ws, event: event) if @app && @app.respond_to?(:on_open)
     end
 
     ws.on :message do |event|
@@ -29,13 +29,11 @@ module Demiurge::Createjs
     end
 
     ws.on :error do |event|
-      puts "Protocol error: #{event.inspect}"
       @app.on_error(ws) if @app && @app.respond_to?(:on_error)
     end
 
     ws.on :close do |event|
-      p [:close, event.code, event.reason].inspect
-      @app.on_close(ws) if @app && @app.respond_to?(:on_close)
+      @app.on_close(transport: ws, event: event) if @app && @app.respond_to?(:on_close)
       ws = nil
     end
 

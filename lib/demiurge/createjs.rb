@@ -3,7 +3,6 @@ require "demiurge/createjs/version"
 require "demiurge/createjs/websocket"
 require "demiurge/createjs/transport"
 
-require "demiurge/createjs/zone"
 require "demiurge/createjs/humanoid"
 require "demiurge/createjs/player"
 

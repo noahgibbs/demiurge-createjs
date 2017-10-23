@@ -34,13 +34,22 @@ module Demiurge::Createjs
   # You can get humanoid spritesheets from Mana Project games (The Mana World,
   # Evol Online, etc.) and/or from the Liberated Pixel Cup. Check OpenGameArt
   # for LPC-compatible artwork for more.
-  class ManaHumanoid
-    attr :direction
-    attr :anim
-    attr :name
+  class Humanoid
+    attr_reader :demi_agent
+    attr_reader :cur_direction
+    attr_reader :cur_anim
+    attr_reader :name
+    attr_reader :x
+    attr_reader :y
+    attr_reader :spritesheet
+    attr_reader :spritestack
 
-    def initialize name, layers, format = "png"
+    def initialize layers, name:, demi_agent:, format: "png"
       @name, @format = name, format
+      @demi_agent = demi_agent
+
+      coords_string = demi_agent.position.split("#",2)[1] || "0,0"
+      @x, @y = coords_string.split(",").map(&:to_i)
 
       @layers = layers.map { |layer| layer.is_a?(String) ? { name: layer } : layer }
       prev_offset = 0
@@ -50,8 +59,10 @@ module Demiurge::Createjs
         prev_offset = layer[:offset]
       end
 
-      @direction = :down
-      @anim = :stand
+      @cur_direction = "right"
+      @cur_anim = "stand"
+      @spritesheet = build_spritesheet_json
+      @spritestack = build_spritestack_json
     end
 
     def stack_name
@@ -92,6 +103,8 @@ module Demiurge::Createjs
         "name" => "#{name}_spritesheet",
         "tilewidth" => 64,
         "tileheight" => 64,
+        "reg_x" => 0,
+        "reg_y" => 32,  # This is hardcoded to ManaSource format in an annoyingly specific way... :-(
         "properties" => {},
         "animations" => @layers.map { |layer| self.class.animation_with_offset("#{layer[:name]}_", layer[:offset]) }.inject({}, &:merge),
         "images" => images,
@@ -117,6 +130,81 @@ module Demiurge::Createjs
         "layers" => layers,
       }
     end
+
+    def animation_messages anim_name
+      # For displayStartAnimation
+      @layers.map do |layer|
+        ["displayStartAnimation", {
+          "stack" => stack_name,
+          "layer" => layer[:name],
+          "w" => 0,
+          "h" => 0,
+          "anim" => "#{layer[:name]}_#{anim_name}"
+        }]
+      end
+    end
+
+    # Calculate messages for animations to move in a line to a tile.
+    # Options:
+    #   "speed" - speed to move one tile of distance
+    #   "duration" - duration for entire walk animation (overrides "speed")
+    def walk_to_tile(x, y, options = {})
+      messages = []
+
+      x_delta = x - @x
+      y_delta = y - @y
+
+      if x_delta.abs > y_delta.abs
+        @cur_direction = x_delta > 0 ? "right" : "left"
+      else
+        @cur_direction = y_delta > 0 ? "down" : "up"
+      end
+
+      if options["duration"]
+        time_to_walk = options["duration"]
+      else
+        speed = options["speed"] || 1.0
+        distance = Math.sqrt(x_delta ** 2 + y_delta ** 2)
+        time_to_walk = distance / speed
+      end
+
+      messages += animation_messages("walk_#{@cur_direction}")
+      # TODO: read the tilewidth and tileheight from the tilesheet, do not hardcode!
+      messages.push ["displayMoveStackToPixel", stack_name, x * 32, y * 32, { "duration" => time_to_walk } ]
+
+      @x = x
+      @y = y
+
+      messages
+      #EM.add_timer(time_to_walk) do
+      #  # Still walking as a result of this call? If so, now stop.
+      #  if @anim_counter == cur_anim_counter
+      #    send_animation "stand_#{@cur_direction}"
+      #  end
+      #end
+    end
+
+    # This gives the pixel coordinates relative to the zone
+    # spritesheet's origin for a humanoid sprite standing at the given
+    # tile.
+    # Note: currently unused, as of Nov 2017
+    def humanoid_coords_for_tile x, y
+      tilewidth = @zone.spritesheet[:tilewidth]
+      tileheight = @zone.spritesheet[:tileheight]
+      sheetwidth = @zone.spritestack[:width] * @zone.spritesheet[:tilewidth]
+      sheetheight = @zone.spritestack[:height] * @zone.spritesheet[:tileheight]
+
+      # Center of terrain tile
+      center_x = tilewidth * x + tilewidth / 2
+      center_y = tileheight * y + tileheight / 2
+
+      # Humanoid sprites generally have feet at about (32, 52). So if a
+      # humanoid sprite was standing at tile 0, 0, you'd want the pixel
+      # center at (16, 16) to line up with the humanoid sprite's feet at
+      # (32, 52).
+      [ center_x - 32, center_y - 52 ]
+    end
+
 
     # Return a humanoid animation, offset by a constant number of frames.
     # This is used to have, say, multiple body or equipment animations in

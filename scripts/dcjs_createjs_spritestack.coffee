@@ -29,6 +29,7 @@ class DCJS.CreatejsDisplay.CreatejsSpriteStack
         container = new createjs.Container
         container.alpha = layer.opacity
         container.z = layer.z
+        container.stack_name = @name
         @display.add_to_layer_container(container)
 
         @layers[layer.name] = { sprites: [], container: container, data: layer.data, z: layer.z }

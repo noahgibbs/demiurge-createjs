@@ -3,6 +3,8 @@
 messageMap = {
   "displayNewSpriteSheet": "newSpriteSheet",
   "displayNewSpriteStack": "newSpriteStack",
+  "displayHideSpriteSheet": "hideSpriteSheet",
+  "displayHideSpriteStack": "hideSpriteStack",
   "displayStartAnimation": "startAnimation",
   "displayMoveStackTo": "moveStackTo",
   "displayTeleportStackTo": "teleportStackTo",
@@ -21,7 +23,7 @@ class DCJS.CreatejsDisplay extends DCJS.Display
     @display_width = $("#" + @canvas)[0].width
     @display_height = $("#" + @canvas)[0].height
 
-    @exposure = { x: 0, y: 0, width: @display_width, height: @display_height }
+    @exposure = { x: @display_width / 2, y: @display_height / 2, width: @display_width, height: @display_height }
 
   setup: () ->
     @stage = new createjs.Stage @canvas
@@ -102,6 +104,9 @@ class DCJS.CreatejsDisplay extends DCJS.Display
   newSpriteSheet: (data) ->
     @spritesheets[data.name] = new DCJS.CreatejsDisplay.CreatejsSpriteSheet(data)
 
+  hideSpriteSheet: (data) ->
+    delete @spritesheets[data.name]
+
   # Keys in data arg:
   #     name: name of spritestack
   #     spritesheet: name of spritesheet
@@ -116,6 +121,21 @@ class DCJS.CreatejsDisplay extends DCJS.Display
 
     stack = new DCJS.CreatejsDisplay.CreatejsSpriteStack(this, sheet, data)
     @spritestacks[data.name] = stack
+
+  hideSpriteStack: (data) ->
+    childIndex = 0
+    while @layer_container.getChildAt(childIndex) is not null
+      if @layer_container.getChildAt(childIndex).stack_name == data.name
+        @layer_container.removeChildAt(childIndex)
+      else
+        childIndex++
+    childIndex = 0
+    while @fringe_container.getChildAt(childIndex) is not null
+      if @fringe_container.getChildAt(childIndex).stack_name == data.name
+        @fringe_container.removeChildAt(childIndex)
+      else
+        childIndex++;
+    delete @spritestacks[data.name]
 
   startAnimation: (data) ->
     stack = @spritestacks[data.stack]
