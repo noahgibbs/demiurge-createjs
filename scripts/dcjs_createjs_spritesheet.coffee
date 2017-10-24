@@ -17,11 +17,8 @@ class DCJS.CreatejsDisplay.CreatejsSpriteSheet
     else
       @frame_definitions = { width: @tilewidth, height:  @tileheight }
       if data.reg_x?
-        console.log "Registration:", data.reg_x, data.reg_y
         @frame_definitions["regX"] = data.reg_x
         @frame_definitions["regY"] = data.reg_y
-      else
-        console.log "No registration (reg_x) found in", data
 
     @loaded = false
     @handlers = {}

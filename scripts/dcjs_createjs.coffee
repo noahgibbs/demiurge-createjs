@@ -52,10 +52,13 @@ class DCJS.CreatejsDisplay extends DCJS.Display
 
   sort_fringe_container: () ->
     cur = this
-    sf = (obj1, obj2) ->
+    sf = (obj1, obj2, options) ->
       y1 = if obj1.y then obj1.y else 0.0
       y2 = if obj2.y then obj2.y else 0.0
-      cur.spaceship(y1, y2)
+      if y1 == y2 && obj1.stack_y? && obj2.stack_y?
+        cur.spaceship(obj1.stack_y, obj2.stack_y)
+      else
+        cur.spaceship(y1, y2)
     @fringe_container.sortChildren(sf)
 
   # TODO: Figure out how to expose CreateJS events:
@@ -151,7 +154,7 @@ class DCJS.CreatejsDisplay extends DCJS.Display
 
   teleportStackToPixel: (stack, x, y, options) ->
     stack = @spritestacks[stack]
-    stack.teleportToPixel x, y, duration: options.duration || 1.0
+    stack.teleportToPixel x, y
 
   moveStackToPixel: (stack, x, y, options) ->
     stack = @spritestacks[stack]

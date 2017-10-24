@@ -22,6 +22,7 @@ class DCJS.CreatejsDisplay.CreatejsSpriteStack
 
     when_sheet_complete @sheet, () =>
       @sheet_complete = true
+      stack_y = 0
       for layer in data.layers
         continue unless layer.visible
 
@@ -30,9 +31,11 @@ class DCJS.CreatejsDisplay.CreatejsSpriteStack
         container.alpha = layer.opacity
         container.z = layer.z
         container.stack_name = @name
-        @display.add_to_layer_container(container)
+        if layer.z != 0  # If not fringe layer
+          @display.add_to_layer_container(container)
 
-        @layers[layer.name] = { sprites: [], container: container, data: layer.data, z: layer.z }
+        @layers[layer.name] = { sprites: [], container: container, data: layer.data, z: layer.z, stack_y: stack_y }
+        stack_y += 1
 
       @handleExposure()
 
@@ -105,7 +108,15 @@ class DCJS.CreatejsDisplay.CreatejsSpriteStack
 
     for layer_name in @layer_order
       layer = @layers[layer_name]
-      layer.container.setTransform @x - exp_start_x, @y - exp_start_y
+      if layer.z == 0  # For Fringe, adjust the transform of each sprite
+        if layer.sprites?
+          for sprite_row in layer.sprites
+            for sprite in sprite_row
+              if sprite?
+                sprite.setTransform @x - exp_start_x + sprite.w_coord * @sheet.tilewidth, @y - exp_start_y + sprite.h_coord * @sheet.tileheight
+        @display.sort_fringe_container()
+      else # For non-Fringe, just set the container transform
+        layer.container.setTransform @x - exp_start_x, @y - exp_start_y
 
     # Spritestack-relative tile coordinates of lowest visible tile
     start_tile_x = parseInt((exp_start_x - @x) / @sheet.tilewidth)
@@ -155,7 +166,13 @@ class DCJS.CreatejsDisplay.CreatejsSpriteStack
             sprite.set name: name
             @sprite_table[name] = sprite
             sprites[h_ctr][w_ctr] = sprite
-            layer.container.addChild sprite
+            if layer.z == 0 # Fringe layer
+              sprite.stack_y = layer.stack_y
+              sprite.w_coord = w_ctr
+              sprite.h_coord = h_ctr
+              @display.fringe_container.addChild sprite
+            else
+              layer.container.addChild sprite
 
           if ld[h] is undefined
             console.log "Illegal height: #{h} in spritesheet #{@name} in loop #{start_tile_y} -> #{end_tile_y}!"
@@ -164,9 +181,13 @@ class DCJS.CreatejsDisplay.CreatejsSpriteStack
             sprite.visible = false
           else
             sprite.visible = true
-            sprite.setTransform w * @sheet.tilewidth, h * @sheet.tileheight
             sprite.gotoAndStop @sheet.ss_frame_to_cjs_frame ld[h][w]
+            if layer.z == 0
+              sprite.setTransform @x - exp_start_x + w * @sheet.tilewidth, @y - exp_start_y + h * @sheet.tileheight
+            else
+              sprite.setTransform w * @sheet.tilewidth, h * @sheet.tileheight
           @_setCyclicAnimationHandler(sprite, @sheet.ss_frame_to_cjs_frame(ld[h][w]), h, w)
+    @display.sort_fringe_container()
 
   animateTile: (layer_name, h, w, anim) ->
     when_sheet_complete @sheet, () =>
@@ -234,7 +255,9 @@ class DCJS.CreatejsDisplay.CreatejsSpriteStack
     when_sheet_complete @sheet, () =>
       createjs.Tween.get(this)
         .to({x: x, y: y}, duration * 1000.0, createjs.Ease.linear)
-        .addEventListener("change", () => @handleExposure())
+        .addEventListener("change", () =>
+          @handleExposure()
+          @display.sort_fringe_container())
         .call (tween) =>  # on complete, set new @x and @y
           @x = x
           @y = y
