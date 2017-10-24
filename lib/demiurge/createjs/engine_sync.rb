@@ -1,6 +1,7 @@
 require "demiurge/tmx"
 require "demiurge/createjs/location"
 require "demiurge/createjs/humanoid"
+require "demiurge/createjs/display"
 
 class Demiurge::Createjs::EngineSync
   def initialize(engine)
@@ -20,10 +21,19 @@ class Demiurge::Createjs::EngineSync
     @engine.all_item_names.each do |item_name|
       item = @engine.item_by_name(item_name)
       if item.is_a?(::Demiurge::TmxLocation)
-        @locations[item_name] = ::Demiurge::Createjs::Location.new demi_location: item
+        @locations[item_name] = ::Demiurge::Createjs::Location.new demi_location: item  # Build a TMX location
       elsif item.is_a?(::Demiurge::Agent)
-        layers = [ "male", "kettle_hat_male", "robe_male" ]
-        @agents[item_name] = ::Demiurge::Createjs::Humanoid.new layers, name: item_name, demi_agent: item
+        if item.get_action("$display") # This special action is used to pass the Display info through to a Display library.
+          builder = Demiurge::Createjs::DisplayBuilder.new(item)
+          display_objs = builder.built_objects
+          raise("Only display one object per agent right now for item #{item.name.inspect}!") if display_objs.size > 1
+          raise("No display objects declared for item #{item.name.inspect}!") if display_objs.size == 0
+          @agents[item_name] = display_objs[0]  # Exactly one display object. Perfect.
+        else
+          # No Display information? Default to generic guy in a hat.
+          layers = [ "male", "kettle_hat_male", "robe_male" ]
+          @agents[item_name] = ::Demiurge::Createjs::Humanoid.new layers, name: item_name, demi_agent: item
+        end
       end
     end
   end
