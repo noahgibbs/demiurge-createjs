@@ -1,5 +1,7 @@
 # TODO: Move these constants into the class
 
+require "demiurge/tmx"
+
 HUMANOID_BASE_ANIMATION = {
   "stand_up" => [0],
   "walk_up" => [1, 8, "walk_up", 0.33],
@@ -168,9 +170,17 @@ module Demiurge::Createjs
         time_to_walk = distance / speed
       end
 
+      # When in doubt, hardcode w/ ManaSource values...
+      pixel_x = x * 32
+      pixel_y = y * 32
+      if @demi_agent.location.is_a?(::Demiurge::TmxLocation)
+        loc_sheet = @demi_agent.location.tiles[:spritesheet]
+        pixel_x = x * loc_sheet[:tilewidth]
+        pixel_y = y * loc_sheet[:tileheight]
+      end
+
       messages += animation_messages("walk_#{@cur_direction}")
-      # TODO: read the tilewidth and tileheight from the tilesheet, do not hardcode!
-      messages.push ["displayMoveStackToPixel", stack_name, x * 32, y * 32, { "duration" => time_to_walk } ]
+      messages.push ["displayMoveStackToPixel", stack_name, pixel_x, pixel_y, { "duration" => time_to_walk } ]
 
       @x = x
       @y = y
