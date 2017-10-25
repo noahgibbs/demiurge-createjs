@@ -11,6 +11,7 @@
   <script src="/scripts/dcjs_createjs_loader.js"></script>
   <script src="/scripts/dcjs_createjs_spritesheet.js"></script>
   <script src="/scripts/dcjs_createjs_spritestack.js"></script>
+  <script src="/scripts/dcjs_createjs_text_anim.js"></script>
 
 </head>
 <body>
@@ -20,15 +21,17 @@
 
   $(function(){
     if(!("WebSocket" in window)) {
-      alert("Sorry, your browser does not appear to support WebSockets. Please use latest version of your browser, and not any version of Opera Mini.");
+      alert("Sorry, your browser does not appear to support WebSockets. Please use the latest version of your browser, and not any version of Opera Mini.");
       return;
     }
 
     window.dcjs_game = new DCJS();
     // If necessary, change "3001" to the appropriate port number!
-    ws = new WebSocket("ws://localhost:3001/");
-    dcjs_game.setTransport("websocket", ws);
-    dcjs_game.setDisplay("createjs", { canvas: "displayCanvas" });
+    var ws = new WebSocket("ws://localhost:3001/");
+    dcjs_game.setTransport(new DCJS.WebsocketTransport(dcjs_game, ws));
+    var display = new DCJS.CreatejsDisplay(dcjs_game, { canvas: "displayCanvas" });
+    dcjs_game.setDisplay(display);
+    //dcjs_game.setSimulation(new SimulationObject(dcjs_game));
 
     dcjs_game.setup();
   });
@@ -37,8 +40,7 @@
 </script>
 <div id="loader" class="loader"></div>
 
-<canvas id="displayCanvas" width="640"
-        height="480"></canvas>
+<canvas id="displayCanvas" width="640" height="480"></canvas>
 
 </body>
 </html>
