@@ -94,6 +94,20 @@ class Demiurge::Createjs::EngineSync
       return
     end
 
+    if data["type"] == "speech"
+      text = data["words"] || "ADD WORDS TO SPEECH NOTIFICATION!"
+      speaker = @engine.item_by_name(data["item acting"])
+      body = @agents[data["item acting"]]
+      speaker_loc_name = speaker.location_name
+      @players.each do |player_name, player|
+        player_loc_name = player.location_name
+        next unless player_loc_name == speaker_loc_name
+        player.message "displayTextAnimOverStack", body.stack_name, text, "color" => data["color"] || "red", "font" => data["font"] || "20px Arial", "duration" => data["duration"] || 5.0
+      end
+      #anim = new window.DCJS.CreatejsDisplay.TextAnim(display.stage, text, { x: pixel_x, y: pixel_y, duration: data["duration"] || 5.0 } );
+      return
+    end
+
     @players.each do |player_name, player|
       player.message "simNotification", data
     end

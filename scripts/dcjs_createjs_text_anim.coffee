@@ -22,8 +22,6 @@ class DCJS.CreatejsDisplay.TextAnim
       .to({x: final_x, y: final_y, alpha: 0.5 }, duration * 1000.0, createjs.Ease.linear)
       .call (tween) =>
         # All done? Remove the text
-        console.log "Calling done (?)"
         display_obj.alpha = 0.0
         display_obj.visible = false
         container.removeChild(display_obj)
-

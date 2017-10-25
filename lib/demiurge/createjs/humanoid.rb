@@ -194,27 +194,17 @@ module Demiurge::Createjs
       #end
     end
 
-    # This gives the pixel coordinates relative to the zone
-    # spritesheet's origin for a humanoid sprite standing at the given
-    # tile.
-    # Note: currently unused, as of Nov 2017
-    def humanoid_coords_for_tile x, y
-      tilewidth = @zone.spritesheet[:tilewidth]
-      tileheight = @zone.spritesheet[:tileheight]
-      sheetwidth = @zone.spritestack[:width] * @zone.spritesheet[:tilewidth]
-      sheetheight = @zone.spritestack[:height] * @zone.spritesheet[:tileheight]
-
-      # Center of terrain tile
-      center_x = tilewidth * x + tilewidth / 2
-      center_y = tileheight * y + tileheight / 2
-
-      # Humanoid sprites generally have feet at about (32, 52). So if a
-      # humanoid sprite was standing at tile 0, 0, you'd want the pixel
-      # center at (16, 16) to line up with the humanoid sprite's feet at
-      # (32, 52).
-      [ center_x - 32, center_y - 52 ]
+    def pixel_coords_for_tile(x, y)
+      # When in doubt, hardcode w/ ManaSource values...
+      pixel_x = x * 32
+      pixel_y = y * 32
+      if @demi_agent.location.is_a?(::Demiurge::TmxLocation)
+        loc_sheet = @demi_agent.location.tiles[:spritesheet]
+        pixel_x = x * loc_sheet[:tilewidth]
+        pixel_y = y * loc_sheet[:tileheight]
+      end
+      [pixel_x, pixel_y]
     end
-
 
     # Return a humanoid animation, offset by a constant number of frames.
     # This is used to have, say, multiple body or equipment animations in
