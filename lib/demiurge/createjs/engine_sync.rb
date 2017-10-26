@@ -3,6 +3,9 @@ require "demiurge/createjs/location"
 require "demiurge/createjs/humanoid"
 require "demiurge/createjs/display"
 
+# A single EngineSync runs on the server, sending messages about the
+# world to the various player connections.
+
 class Demiurge::Createjs::EngineSync
   def initialize(engine)
     @engine = engine
