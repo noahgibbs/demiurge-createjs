@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+
+set -e
+set -x
+
+# Change to this script's own directory, then back up one level.
+cd "$(dirname "$0")"
+cd ..
+
+if [ ! -f example_demiurge_server.crt ]; then
+  pushd ~/.ssh
+
+  # All of this makes a self-signed certificate. You know what's hard to get modern browsers to use? A self-signed certificate.
+  # See https://gist.github.com/tadast/9932075
+  openssl genrsa -out example_demiurge_server.orig.key 4096
+  openssl rsa -in example_demiurge_server.orig.key -out example_demiurge_server.key
+  openssl req -new -key example_demiurge_server.key -x509 -nodes -new -out example_demiurge_server.crt -subj /CN=localhost.ssl -reqexts SAN -extensions SAN -config <(cat /System/Library/OpenSSL/openssl.cnf <(printf '[SAN]\nsubjectAltName=DNS:localhost.ssl')) -sha256 -days 3650
+  grep localhost.ssl /private/etc/hosts || (echo "127.0.0.1 localhost.ssl" | sudo tee -a /private/etc/hosts)
+
+  popd
+  cp ~/.ssh/example_demiurge_server.* .
+fi
+
+# Thin doesn't seem to support HTTP and HTTPS on the same port (fair), but *does* support HTTPS and WSS on the same port.
+thin start -R config.ru -p 3001 --ssl --ssl-disable-verify --ssl-key-file ./example_demiurge_server.key --ssl-cert-file ./example_demiurge_server.crt
