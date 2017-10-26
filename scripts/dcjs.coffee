@@ -2,12 +2,16 @@
 # the app and local UI and whatever else is necessary.
 
 class window.DCJS
+  constructor: () ->
+    @message_handlers = []
   setTransport: (transport) ->
     @transport = transport
-  setDisplay: (display) ->
-    @display = display
-  setSimulation: (simulation) ->
-    @simulation = simulation
+  #setDisplay: (display) ->
+  #  @display = display
+  #setSimulation: (simulation) ->
+  #  @simulation = simulation
+  setMessageHandler: (prefix, handler) ->
+    @message_handlers.push [prefix, handler]
 
   getTransport: () -> @transport
   getDisplay: () -> @display
@@ -15,19 +19,22 @@ class window.DCJS
     dcjs_obj = this
     @transport.setHandler (msgName, args) -> dcjs_obj.gotTransportCall(msgName, args)
     @transport.setup()
-    @display.setup()
-    @simulation.setup()
+    for items in @message_handlers
+      prefix = items[0]
+      handler = items[1]
+      if handler.setup?
+        handler.setup()
 
   gotTransportCall: (msgName, args) ->
     if msgName == "start"
+      @transport.sendMessage "fakelogin", "a", "b", "c"
       console.log "Got start message! Yay!"
       return
-
-    if msgName.slice(0, 7) == "display"
-      return @display.message(msgName, args)
-
-    if msgName.slice(0,3) == "sim"
-      return @simulation.message(msgName, args)
+    for items in @message_handlers
+      prefix = items[0]
+      handler = items[1]
+      if prefix == "" || msgName.slice(0, prefix.length) == prefix
+        return handler.message(msgName, args)
 
     console.warn "Unknown message name: #{msgName}, args: #{args}"
 

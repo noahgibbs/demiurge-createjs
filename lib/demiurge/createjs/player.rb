@@ -11,16 +11,20 @@ class Demiurge::Createjs::Player
 
     @currently_shown = {}
 
-    # "Exposure" as understood on the client starts at 0 unless set.
-    # You can think of it as the center of the player's viewport.  The
-    # player object expects to have a location and viewport set pretty
-    # much immediately after creation, so we don't send a message for
-    # it yet.
+    # "Exposure" as understood on the client starts with the upper
+    # left at 0 unless set.  You can think of it as the center of the
+    # player's viewport.  The player object expects to have a location
+    # and viewport set pretty much immediately after creation, so we
+    # don't send a message for it yet.
+
+    # Normally a "player" will be set up by an EngineSync to
+    # automatically follow a particular agent (that player's body) so
+    # the panning will be taken care of that way pretty rapidly.
 
     @view_width = width
     @view_height = height
-    @pan_center_x = 0
-    @pan_center_y = 0
+    @pan_center_x = width / 2
+    @pan_center_y = height / 2
 
     @engine_sync.add_player(self)
 

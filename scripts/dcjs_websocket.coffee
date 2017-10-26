@@ -25,7 +25,4 @@ class DCJS.WebsocketTransport extends DCJS.Transport
     send_api_message(@ws, msgName, args)
 
   api_handler: (msg_type, args) ->
-    console.log "Handling game msg: #{msg_type}", args
-    if msg_type == "start"
-      return send_api_message @ws, "login", ["a", "b", "c"]
     @handler msg_type, args
