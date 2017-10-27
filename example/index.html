@@ -19,6 +19,12 @@
 <script>
 //<![CDATA[
 
+// Not HTTPS already? Redirect to HTTPS.
+if (window.location.protocol != "https:") {
+   window.location.protocol = "https:";
+   window.location.reload();
+}
+
   $(function(){
     if(!("WebSocket" in window)) {
       alert("Sorry, your browser does not appear to support WebSockets. Please use the latest version of your browser, and not any version of Opera Mini.");
