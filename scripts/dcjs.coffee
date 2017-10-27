@@ -26,10 +26,6 @@ class window.DCJS
         handler.setup()
 
   gotTransportCall: (msgName, args) ->
-    if msgName == "start"
-      @transport.sendMessage "fakelogin", "a", "b", "c"
-      console.log "Got start message! Yay!"
-      return
     for items in @message_handlers
       prefix = items[0]
       handler = items[1]

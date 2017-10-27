@@ -18,7 +18,6 @@ module Demiurge::Createjs
 
     ws.on :open do |event|
       puts "Socket open"
-      ws.send Demiurge::Createjs.websocket_game_message("start")
       @app.on_open(transport: ws, event: event) if @app && @app.respond_to?(:on_open)
     end
 

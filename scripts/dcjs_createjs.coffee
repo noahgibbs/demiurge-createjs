@@ -180,7 +180,6 @@ class DCJS.CreatejsDisplay extends DCJS.Display
     duration = options.duration || 5.0
     text_x = stack.x - @exposure.x + @display_width / 2
     text_y = stack.y - @exposure.y + @display_height / 2 - 32 # Add a fudge factor for ManaSource humanoids having a weird registration point for right now...
-    console.log "TextOverStack w/ opts", stack, text_x, text_y, options.color, options.font, options.duration
 
     new DCJS.CreatejsDisplay.TextAnim(@stage, text, { x: text_x, y: text_y, color: options.color, font: options.font, duration: options.duration || 5.0 } )
 
