@@ -22,7 +22,7 @@ class DCJS.CreatejsDisplay.CreatejsSpriteStack
 
     when_sheet_complete @sheet, () =>
       @sheet_complete = true
-      stack_y = 0
+      stack_y = parseInt(Math.random() * 30000)  # Fix for an obscure agents-walk-through-each-other visual bug
       for layer in data.layers
         continue unless layer.visible
 
