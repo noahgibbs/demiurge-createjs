@@ -7,6 +7,8 @@ require "demiurge/createjs/display"
 # world to the various player connections.
 
 class Demiurge::Createjs::EngineSync
+  attr_reader :engine
+
   def initialize(engine)
     @engine = engine
     @players = {}
@@ -67,6 +69,22 @@ class Demiurge::Createjs::EngineSync
         player.message "displayTeleportStackToPixel", agent_name + "_stack", x * spritesheet[:tilewidth], y * spritesheet[:tileheight], {}
       end
     end
+  end
+
+  def remove_player(player)
+    @players.delete(player.name)
+    loc = @engine.item_by_name player.location_name
+
+    # Indicate to all present that the player has disappeared
+    # TODO: once the player is embodied, include the body as item_acting
+    @engine.send_notification({ "player_name" => player.name }, notification_type: "player_logout", location: loc.name, zone: loc.zone_name, item_acting: nil)
+
+    # TODO: Once players are properly embodied, and if this player is, hide them on logout.
+    # Also, move their body out of the room somehow.
+    #@players.values.each do |p|
+    #  p.message "displayHideSpriteStack", "#{player.name}_stack"
+    #  p.message "displayHideSpriteSheet", "#{player.name}_spritesheet"
+    #end
   end
 
   private

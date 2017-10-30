@@ -1,16 +1,11 @@
 module Demiurge::Createjs
+  # This is a setting that the individual App objects can check.
   def self.get_record_traffic
     @record_traffic
   end
 
   def self.record_traffic(record = true)
     @record_traffic = record
-  end
-
-  def self.websocket_game_message(msg_name, *args)
-    out_str = MultiJson.dump ["game_msg", msg_name, *args]
-    File.open("outgoing_traffic.json", "a") { |f| f.write out_str + "\n" } if @record_traffic
-    out_str
   end
 
   def self.websocket_handler(env)
@@ -41,8 +36,8 @@ module Demiurge::Createjs
   end
 
   def self.handle_message(ws, data)
-    if data[0] == "gamePing"
-      ws.send websocket_game_message("gamePong")
+    if data[0] == "auth"
+      @app.on_auth_message(ws, data[1], *data[2]) if @app && @app.respond_to?(:on_auth_message)
       return
     end
     @app.on_message(ws) if @app && @app.respond_to?(:on_message)

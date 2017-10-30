@@ -1,6 +1,7 @@
 # dcjs_createjs.coffee
 
 messageMap = {
+  "displayInit": "initMessage",
   "displayNewSpriteSheet": "newSpriteSheet",
   "displayNewSpriteStack": "newSpriteStack",
   "displayHideSpriteSheet": "hideSpriteSheet",
@@ -21,12 +22,14 @@ class DCJS.CreatejsDisplay extends DCJS.Display
     @spritestacks = {}
 
     @canvas = options["canvas"] || "displayCanvas"
-    @display_width = $("#" + @canvas)[0].width
-    @display_height = $("#" + @canvas)[0].height
-
-    @exposure = { x: @display_width / 2, y: @display_height / 2, width: @display_width, height: @display_height }
 
   setup: () ->
+
+  createjs_setup: () ->
+    @display_width = $("#" + @canvas)[0].width
+    @display_height = $("#" + @canvas)[0].height
+    @exposure = { x: @display_width / 2, y: @display_height / 2, width: @display_width, height: @display_height }
+
     @stage = new createjs.Stage @canvas
     @layer_container = new createjs.Container
     @stage.addChild(@layer_container)
@@ -82,6 +85,12 @@ class DCJS.CreatejsDisplay extends DCJS.Display
       console.warn "Couldn't handle message type #{msgName}!"
       return
     this[handler](argArray...)
+
+  initMessage: (data) ->
+    console.log "InitMessage w/ canvas #{@canvas}", data
+    $("#" + @canvas).width(data.width)
+    $("#" + @canvas).height(data.height)
+    @createjs_setup()
 
   # This method takes the following keys to its argument:
   #    name: the spritesheet name

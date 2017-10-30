@@ -1,10 +1,10 @@
 class Demiurge::Createjs::Player
-  attr_reader :transport
   attr_reader :name
   attr_reader :location_name
+  attr_reader :websocket
 
-  def initialize(transport:, name: "player", location_name:, tilewidth: 32, tileheight: 32, width: 640, height: 480, engine_sync:)
-    @transport = transport
+  def initialize(websocket:, name:, location_name:, tilewidth: 32, tileheight: 32, width: 640, height: 480, engine_sync:)
+    @websocket = websocket
     @engine_sync = engine_sync
     @name = name
     @location_name = location_name
@@ -26,13 +26,20 @@ class Demiurge::Createjs::Player
     @pan_center_x = width / 2
     @pan_center_y = height / 2
 
+    # Initially we've just connected, and aren't logged in (yet?)
     @engine_sync.add_player(self)
 
     @shown_location = nil
   end
 
-  def message(*args)
-    @transport.game_message *args
+  def message(msg_name, *args)
+    out_str = MultiJson.dump [ "game_msg", msg_name, *args ]
+    File.open("outgoing_traffic.json", "a") { |f| f.write out_str + "\n" } if Demiurge::Createjs.get_record_traffic
+    @websocket.send out_str
+  end
+
+  def deregister()
+    @engine_sync.remove_player(self)
   end
 
   def show_sprites(item_name, spritesheet, spritestack)
