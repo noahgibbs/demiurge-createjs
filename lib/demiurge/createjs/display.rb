@@ -10,7 +10,7 @@ module Demiurge::Createjs
     def initialize(agent)
       @agent = agent
       @built_objects = []
-      disp = agent.get_action("$display")
+      disp = agent.get_action("$display")["block"]
       raise("No display action available for DisplayBuilder!") unless disp
       self.instance_eval(&disp) # Create the built objects from the block
     end

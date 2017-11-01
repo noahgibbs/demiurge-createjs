@@ -28,7 +28,7 @@ class Demiurge::Createjs::EngineSync
       if item.is_a?(::Demiurge::TmxLocation)
         @locations[item_name] = ::Demiurge::Createjs::Location.new demi_location: item  # Build a TMX location
       elsif item.is_a?(::Demiurge::Agent)
-        if item.get_action("$display") # This special action is used to pass the Display info through to a Display library.
+        if item.get_action("$display")["block"] # This special action is used to pass the Display info through to a Display library.
           builder = Demiurge::Createjs::DisplayBuilder.new(item)
           display_objs = builder.built_objects
           raise("Only display one object per agent right now for item #{item.name.inspect}!") if display_objs.size > 1

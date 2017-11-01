@@ -1,3 +1,15 @@
+# TODO: Deprecate this. For the reasons below, but also because we
+# want to be able to save/load/reload engine state in a way that isn't
+# compatible with storing the player accounts in there. Player
+# settings? Maybe, but probably not. Remember, this would only work
+# with settings we want to reload and revert with the world
+# state. That works well with things about the player's in-game
+# existence (bank contents, say) but not with things that are
+# fundamentally out-of-character and out-of-game (email, Twitter
+# handle, time zone, password.)
+
+
+
 # Accounts and their relatives are a potentially bottomless hole of
 # technical interest and difficulty.  I'm handling this in a really
 # simple way: Bcrypt exchange over HTTPS/WSS is built into
@@ -77,7 +89,6 @@ module Demiurge::Createjs
           websocket_send websocket, "failed_login", "No such usr as #{username.inspect}!"
           return
         end
-        STDERR.puts "Get get_salt, account state for #{username.inspect}: #{account_state[username].inspect}"
         user_salt = account_state[username]["account"]["salt"]
         websocket_send websocket, "login_salt", user_salt
         return
