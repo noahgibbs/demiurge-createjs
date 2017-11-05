@@ -71,6 +71,10 @@ module Demiurge::Createjs
       "#{name}_stack"
     end
 
+    def sheet_name
+      "#{name}_spritesheet"
+    end
+
     def build_spritesheet_json
       images = (@layers.zip(0..(@layers.size - 1))).flat_map do |layer, index|
         [

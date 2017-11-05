@@ -27,7 +27,7 @@ class Demiurge::Createjs::EngineSync
       item = @engine.item_by_name(item_name)
       if item.is_a?(::Demiurge::TmxLocation)
         @locations[item_name] = ::Demiurge::Createjs::Location.new demi_location: item  # Build a TMX location
-      elsif item.is_a?(::Demiurge::Agent)
+      elsif item.is_a?(::Demiurge::Agent) && item.state["position"]  # Agents are allowed to have no position and just be instantiable
         if item.get_action("$display")["block"] # This special action is used to pass the Display info through to a Display library.
           builder = Demiurge::Createjs::DisplayBuilder.new(item)
           display_objs = builder.built_objects
@@ -44,8 +44,9 @@ class Demiurge::Createjs::EngineSync
   end
 
   def add_player(player)
+    body = player.body
     @players[player.name] = player
-    loc = @engine.item_by_name player.location_name
+    loc = body.location
 
     # Do we have a tmx_location for that player?
     unless @locations[loc.name]
@@ -57,7 +58,8 @@ class Demiurge::Createjs::EngineSync
     spritestack = @locations[loc.name].spritestack
     # Show the location's sprites
     player.show_sprites(loc.name, spritesheet, spritestack)
-    player.message "displayInstantPanToPixel", (spritesheet[:tilewidth] * spritestack[:width]) / 2, (spritesheet[:tileheight] * spritestack[:height]) / 2, {}
+    x, y = ::Demiurge::TmxLocation.position_to_coords(body.position)
+    player.send_instant_pan_to_pixel_offset x, y
 
     # Anybody else there?
     @agents.each do |agent_name, agent|
@@ -72,8 +74,13 @@ class Demiurge::Createjs::EngineSync
   end
 
   def remove_player(player)
+    if player.nil?
+      STDERR.puts "Nil player passed to remove_player!"
+      return
+    end
+    body = player.body
     @players.delete(player.name)
-    loc = @engine.item_by_name player.location_name
+    loc = body.location
 
     # Indicate to all present that the player has disappeared
     # TODO: once the player is embodied, include the body as item_acting
@@ -82,7 +89,7 @@ class Demiurge::Createjs::EngineSync
     # TODO: Once players are properly embodied, and if this player is, hide them on logout.
     # Also, move their body out of the room somehow.
     #@players.values.each do |p|
-    #  p.message "displayHideSpriteStack", "#{player.name}_stack"
+    #  p.message "displayHideSpriteStack", body.stack_name
     #  p.message "displayHideSpriteSheet", "#{player.name}_spritesheet"
     #end
   end
@@ -102,7 +109,7 @@ class Demiurge::Createjs::EngineSync
       move_messages = agent.walk_to_tile x, y, { "duration" => 0.5 }
       @players.each do |player_name, player|
         if data["old_location"] == data["new_location"]
-          player_loc_name = player.location_name
+          player_loc_name = player.body.location_name
           # Just moving somebody around in a location
           next if data["new_location"] != player_loc_name  # Moving around where this player can't see, ignore it
           move_messages.each do |msg_array|
@@ -121,7 +128,7 @@ class Demiurge::Createjs::EngineSync
       body = @agents[data["item acting"]]
       speaker_loc_name = speaker.location_name
       @players.each do |player_name, player|
-        player_loc_name = player.location_name
+        player_loc_name = player.body.location_name
         next unless player_loc_name == speaker_loc_name
         player.message "displayTextAnimOverStack", body.stack_name, text, "color" => data["color"] || "red", "font" => data["font"] || "20px Arial", "duration" => data["duration"] || 5.0
       end

@@ -1,13 +1,13 @@
 class Demiurge::Createjs::Player
   attr_reader :name
-  attr_reader :location_name
+  attr_reader :body
   attr_reader :websocket
 
-  def initialize(websocket:, name:, location_name:, tilewidth: 32, tileheight: 32, width: 640, height: 480, engine_sync:)
+  def initialize(websocket:, name:, body:, width: 640, height: 480, engine_sync:)
     @websocket = websocket
     @engine_sync = engine_sync
     @name = name
-    @location_name = location_name
+    @body = body
 
     @currently_shown = {}
 
@@ -16,7 +16,7 @@ class Demiurge::Createjs::Player
     # player's viewport.  The player object expects to have a location
     # and viewport set pretty much immediately after creation, so we
     # don't send a message for it yet.
-
+    #
     # Normally a "player" will be set up by an EngineSync to
     # automatically follow a particular agent (that player's body) so
     # the panning will be taken care of that way pretty rapidly.
@@ -25,17 +25,16 @@ class Demiurge::Createjs::Player
     @view_height = height
     @pan_center_x = width / 2
     @pan_center_y = height / 2
-
-    # Initially we've just connected, and aren't logged in (yet?)
-    @engine_sync.add_player(self)
-
-    @shown_location = nil
   end
 
   def message(msg_name, *args)
     out_str = MultiJson.dump [ "game_msg", msg_name, *args ]
     File.open("outgoing_traffic.json", "a") { |f| f.write out_str + "\n" } if Demiurge::Createjs.get_record_traffic
     @websocket.send out_str
+  end
+
+  def register()
+    @engine_sync.add_player(self)
   end
 
   def deregister()
@@ -70,12 +69,5 @@ class Demiurge::Createjs::Player
     @pan_center_x = x
     @pan_center_y = y
     message "displayInstantPanToPixel", x, y, options
-  end
-
-  def pan_offset_for_center_tile(x, y)
-    tile_center_x = x * @tilewidth + @tilewidth / 2
-    tile_center_y = y * @tileheight + @tileheight / 2
-
-    [tile_center_x, tile_center_y]
   end
 end

@@ -21,7 +21,6 @@ class DCJS.WebsocketTransport extends DCJS.Transport
         @pending_password = false
         return
       if data[0] == "login_salt"
-        console.log "Got salt!"
         bcrypt = dcodeIO.bcrypt
         salt = data[1]
         hashed = bcrypt.hashSync(@pending_password, salt)
@@ -29,7 +28,7 @@ class DCJS.WebsocketTransport extends DCJS.Transport
         @sendMessageWithType "auth", "hashed_login", { username: @pending_username, bcrypted: hashed }
         return
       if data[0] == "login"
-        console.log "Logged in as #{data[1]}!"
+        console.log "Logged in as", data[1]
         @logged_in_as = data[1]
         return
 
@@ -63,5 +62,4 @@ class DCJS.WebsocketTransport extends DCJS.Transport
   login: (username, password) ->
     @pending_password = password
     @pending_username = username
-    console.log "Sending get_salt request"
     @sendMessageWithType("auth", "get_salt", { username: username })
