@@ -1,13 +1,13 @@
 class Demiurge::Createjs::Player
   attr_reader :name
-  attr_reader :body
+  attr_reader :demi_agent
   attr_reader :websocket
 
-  def initialize(websocket:, name:, body:, width: 640, height: 480, engine_sync:)
+  def initialize(websocket:, name:, demi_agent:, width: 640, height: 480, engine_sync:)
     @websocket = websocket
     @engine_sync = engine_sync
     @name = name
-    @body = body
+    @demi_agent = demi_agent
 
     @currently_shown = {}
 
