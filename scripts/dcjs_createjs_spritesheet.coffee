@@ -8,74 +8,69 @@ class DCJS.CreatejsDisplay.CreatejsSpriteSheet
     DCJS.CreatejsDisplay.loader.addImages images
 
     if @images[0].frame_definitions?
-      # TODO: verify that all GIDs are consecutive in frame definitions
       @frame_definitions = []
       for image, i in @images
         # For oversize tiles, make sure their bottom left corner winds up in the right spot via reg_y param
         image_fds = ([ fd.x, fd.y, fd.width, fd.height, i, 0, fd.height - @tileheight ] for fd in image.frame_definitions)
         @frame_definitions = @frame_definitions.concat(image_fds)
-    else
-      @frame_definitions = { width: @tilewidth, height:  @tileheight }
-      if data.reg_x?
-        @frame_definitions["regX"] = data.reg_x
-        @frame_definitions["regY"] = data.reg_y
 
     @loaded = false
     @handlers = {}
 
-  create_sprite: () ->
-    new createjs.Sprite(@sheet)
+  # This started from CreateJS's SpriteSheet _calculateFrames, but it has slightly different requirements.
+  # CreateJS frame specifications are an array of the form:
+  #     [ x, y, width, height, image_num, reg_x, reg_y ]
+  # The final three numbers are optional.
+  # The Demiurge SpriteSheet objects are hashes, with fields including:
+  # "firstgid", "image", "imagewidth", "imageheight", "tile_width", "tile_height", "oversize", "spacing", "margin"
+  # Currently we use ManaSource-style spritesheets for terrain with a primary "natural" tile size
+  # and occasional "oversize" sheets that are a multiple of this size. Oversize sprites have a tile location
+  # at the "natural" size and just extend upward and rightward from there. They're only used in the "Fringe"
+  # layer(s) with interesting Z coordinates - oversize objects in the layers that are always above or below
+  # the agent sprites don't need to be treated specially since they don't interleave in unusual ways. They're
+  # always either all-below or all-above the player and can just be handled with a lot of tiles of the natural
+  # size.
+  calculate_frames: () ->
+    return if @frame_definitions?
 
-  # Handler is called on the event with an "event" object:
-  #   event.name - which event
-  #   event.source - object sending event
-  #
-  # Events:
-  #   complete - all sprites loaded
-  #
-  addEventListener: (event, handler) ->
-    if event == "complete"
-      @handlers["complete"] = [] unless @handlers["complete"]?
-      @handlers["complete"].push handler
-    else
-      console.error "Unknown event #{event} on spritesheet!"
+    dead_frame = [ 0, 0, @tilewidth, @tileheight, 0, 0, 0 ] # Use the first natural-size tile of the first image for dead frames.
+    @frame_definitions = [ dead_frame ]  # GIDs start at 1, so array offset 0 is always a dead frame.
+    frame_count = 1
 
-  ss_frame_to_cjs_frame: (frame_num) ->
-    return 0 if frame_num == 0
-    for offset, image of @images
-      if frame_num >= image.firstgid && (!@images[offset + 1]? || frame_num < @images[offset + 1].firstgid)
-        return (frame_num - @images[offset].firstgid) + @images[offset].cjs_offset
-    console.warn "Can't map frame #{frame_num} into SpriteSheet #{@name}!"
-    undefined
+    for image, offset in @images
+      spacing = if image.spacing? then image.spacing else 0
+      margin = if image.margin? then image.margin else 0
 
-  ss_anim_frames_to_cjs_anim_frames: (animation) ->
-    if typeof animation == "number"
-      @ss_frame_to_cjs_frame(animation)
-    else if animation instanceof Array
-      if animation.length == 1
-        [@ss_frame_to_cjs_frame animation[0]]
-      else
-        { speed: animation[3], next: animation[2], frames: [(@ss_frame_to_cjs_frame animation[0])..(@ss_frame_to_cjs_frame animation[1])] }
-    else  # complex
-      frames = animation.frames
-      frames = [frames] if typeof frames == "number"
-      frames = @ss_anim_frames_to_cjs_anim_frames frames  # This time as Array
-      { speed: animation.speed, next: animation.next, frames: frames }
+      # Each new image specifies its starting GID. This may require pushing dead frames to pad
+      # to the correct frame-number/GID.
+      dead_frames = image.firstgid - frame_count
+      console.log "Adding #{dead_frames} dead frames for image #{offset}/#{image.image}, up to GID #{image.firstgid}"
+      if dead_frames < 0
+        console.log "ERROR: GIDs are specified badly in tilesets! You are likely to see wrong tiles!"
+      else if dead_frames > 0
+        @frame_definitions.push(dead_frame) for num in [1..dead_frames]
+        frame_count += dead_frames
 
-  cyclic_anim_for_tile: (tile) ->
-    @cyclic_animations["tile_anim_#{tile}"]
+      # Oversize images may have their own tilewidth and tileheight
+      imagewidth = image.imagewidth
+      #imagewidth = image.loaded_dom.width
+      imageheight = image.imageheight
+      imagetilewidth = image.tilewidth
+      imagetileheight = image.tileheight
+      reg_x = 0
+      reg_y = imagetileheight - @tileheight
 
-  ss_cyclic_anim_to_dcjs_cyclic_anim: (animation) ->
-    anim = []
+      console.log "Adding frames:", imagewidth, imageheight, imagetilewidth, imagetileheight, reg_x, reg_y
+      y = margin
+      while y <= imageheight - margin - imagetileheight
+        x = margin
+        while x <= imagewidth - margin - imagetilewidth
+          frame_count += 1
+          console.log "Adding frame"
+          @frame_definitions.push [ x, y, imagetilewidth, imagetileheight, offset, reg_x, reg_y ]
+          x += imagetilewidth + spacing
+        y += imagetileheight + spacing
 
-    total_duration = 0
-    total_duration += section.duration for section in animation
-    anim.cycle_time = total_duration * 10.0
-
-    for section in animation
-      anim.push frame: @ss_frame_to_cjs_frame(section.frame), duration: section.duration * 10.0
-
-    anim
 
   imagesLoaded: () ->
     images = []
@@ -106,8 +101,57 @@ class DCJS.CreatejsDisplay.CreatejsSpriteSheet
       new_num = @ss_frame_to_cjs_frame tile_num
       @cyclic_animations["tile_anim_#{new_num}"] = @ss_cyclic_anim_to_dcjs_cyclic_anim(animation)
 
+    if !@frame_definitions?
+      @calculate_frames()
+
     @sheet = new createjs.SpriteSheet frames: @frame_definitions, images: images, animations: @cjs_animations
 
     @loaded = true
     e = { name: "complete", source: this }
     handler(e) for handler in @handlers["complete"]
+
+  create_sprite: () ->
+    new createjs.Sprite(@sheet)
+
+  # Handler is called on the event with an "event" object:
+  #   event.name - which event
+  #   event.source - object sending event
+  #
+  # Events:
+  #   complete - all sprites loaded
+  #
+  addEventListener: (event, handler) ->
+    if event == "complete"
+      @handlers["complete"] = [] unless @handlers["complete"]?
+      @handlers["complete"].push handler
+    else
+      console.error "Unknown event #{event} on spritesheet!"
+
+  ss_anim_frames_to_cjs_anim_frames: (animation) ->
+    if typeof animation == "number"
+      animation
+    else if animation instanceof Array
+      if animation.length == 1
+        [animation[0]]
+      else
+        { speed: animation[3], next: animation[2], frames: [(animation[0])..(animation[1])] }
+    else  # complex
+      frames = animation.frames
+      frames = [frames] if typeof frames == "number"
+      frames = @ss_anim_frames_to_cjs_anim_frames frames  # This time as Array
+      { speed: animation.speed, next: animation.next, frames: frames }
+
+  cyclic_anim_for_tile: (tile) ->
+    @cyclic_animations["tile_anim_#{tile}"]
+
+  ss_cyclic_anim_to_dcjs_cyclic_anim: (animation) ->
+    anim = []
+
+    total_duration = 0
+    total_duration += section.duration for section in animation
+    anim.cycle_time = total_duration * 10.0
+
+    for section in animation
+      anim.push section.frame, duration: section.duration * 10.0
+
+    anim

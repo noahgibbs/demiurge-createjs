@@ -181,12 +181,12 @@ class DCJS.CreatejsDisplay.CreatejsSpriteStack
             sprite.visible = false
           else
             sprite.visible = true
-            sprite.gotoAndStop @sheet.ss_frame_to_cjs_frame ld[h][w]
+            sprite.gotoAndStop ld[h][w]
             if layer.z == 0
               sprite.setTransform @x - exp_start_x + w * @sheet.tilewidth, @y - exp_start_y + h * @sheet.tileheight
             else
               sprite.setTransform w * @sheet.tilewidth, h * @sheet.tileheight
-          @_setCyclicAnimationHandler(sprite, @sheet.ss_frame_to_cjs_frame(ld[h][w]), h, w)
+          @_setCyclicAnimationHandler(sprite, ld[h][w], h, w)
     @display.sort_fringe_container()
 
   animateTile: (layer_name, h, w, anim) ->

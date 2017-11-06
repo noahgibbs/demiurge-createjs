@@ -101,7 +101,7 @@ class Demiurge::Createjs::EngineSync
     # TODO: how do we deregister the Demiurge agent?
 
     # Indicate to all present that the player has disappeared
-    @engine.send_notification({ "player_name" => player.name }, notification_type: "player_logout", location: loc.name, zone: loc.zone_name, item_acting: agent)
+    @engine.send_notification({ "player_name" => player.name }, notification_type: "player_logout", location: loc.name, zone: loc.zone_name, item_acting: agent.name)
 
     # TODO: Once players are properly embodied, and if this player is, hide them on logout.
     # Also, move their body out of the room somehow.

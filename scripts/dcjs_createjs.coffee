@@ -99,7 +99,7 @@ class DCJS.CreatejsDisplay extends DCJS.Display
   #    tileheight: the height of each tile
   #    animations: an object of animation names mapped to DCJS animation specs (see animate methods)
   #
-  # Here's an example:
+  # Here's an example (slightly outdated in format?):
   # {
   #   "name" => "test_humanoid_spritesheet",
   #   "tilewidth" => 64,
@@ -109,7 +109,7 @@ class DCJS.CreatejsDisplay extends DCJS.Display
   #     {
   #       "firstgid" => 1,
   #       "image" => "/sprites/skeleton_walkcycle.png",
-  #       "image_width" => 576,
+  #       "imagewidth" => 576,
   #       "image_height" => 256
   #     }
   # }
