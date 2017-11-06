@@ -44,7 +44,6 @@ class DCJS.CreatejsDisplay.CreatejsSpriteSheet
       # Each new image specifies its starting GID. This may require pushing dead frames to pad
       # to the correct frame-number/GID.
       dead_frames = image.firstgid - frame_count
-      console.log "Adding #{dead_frames} dead frames for image #{offset}/#{image.image}, up to GID #{image.firstgid}"
       if dead_frames < 0
         console.log "ERROR: GIDs are specified badly in tilesets! You are likely to see wrong tiles!"
       else if dead_frames > 0
@@ -60,13 +59,11 @@ class DCJS.CreatejsDisplay.CreatejsSpriteSheet
       reg_x = 0
       reg_y = imagetileheight - @tileheight
 
-      console.log "Adding frames:", imagewidth, imageheight, imagetilewidth, imagetileheight, reg_x, reg_y
       y = margin
       while y <= imageheight - margin - imagetileheight
         x = margin
         while x <= imagewidth - margin - imagetilewidth
           frame_count += 1
-          console.log "Adding frame"
           @frame_definitions.push [ x, y, imagetilewidth, imagetileheight, offset, reg_x, reg_y ]
           x += imagetilewidth + spacing
         y += imagetileheight + spacing
