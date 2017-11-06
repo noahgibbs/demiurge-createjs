@@ -15,6 +15,7 @@
 # set_accounts_engine_sync method.
 module Demiurge::Createjs
   module JsonAccounts
+    ACCOUNT_NAME_REGEX = /[a-zA-Z0-9]+/
     def websocket_send(socket, *args)
       socket.send MultiJson.dump(args)
     end
@@ -49,12 +50,16 @@ module Demiurge::Createjs
       if msg_type == "register_account"
         username, salt, hashed = args[0]["username"], args[0]["salt"], args[0]["bcrypted"]
         if @account_state[username]
-          # Technically this is a failed registration, not a login.
-          websocket_send websocket, "failed_login", "Account #{username.inspect} already exists!"
+          websocket_send websocket, "failed_registration", "Account #{username.inspect} already exists!"
+          return
+        end
+        unless username =~ ACCOUNT_NAME_REGEX
+          websocket_send websocket, "failed_registration", "Account name contains illegal characters: #{username.inspect}!"
           return
         end
         @account_state[username] = { "account" => { "salt" => salt, "hashed" => hashed, "method" => "bcrypt" } }
         sync_account_state
+        websocket_send websocket, "registration", { "account" => username }
 
         return
       end
