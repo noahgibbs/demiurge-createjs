@@ -85,6 +85,8 @@ module Demiurge::Createjs
             "imageheight" => 256,
             "tilewidth" => 64,
             "tileheight" => 64,
+            "reg_x" => 0,
+            "reg_y" => 32,  # This is hardcoded to ManaSource format in an annoyingly specific way... :-(
           },
           {
             "firstgid" => HUMANOID_IMAGE_OFFSETS[:hurt] + layer[:offset],
@@ -93,6 +95,8 @@ module Demiurge::Createjs
             "imageheight" => 64,
             "tilewidth" => 64,
             "tileheight" => 64,
+            "reg_x" => 0,
+            "reg_y" => 32,
           },
           {
             "firstgid" => HUMANOID_IMAGE_OFFSETS[:slash] + layer[:offset],
@@ -101,6 +105,8 @@ module Demiurge::Createjs
             "imageheight" => 256,
             "tilewidth" => 64,
             "tileheight" => 64,
+            "reg_x" => 0,
+            "reg_y" => 32,
           },
           {
             "firstgid" => HUMANOID_IMAGE_OFFSETS[:spellcast] + layer[:offset],
@@ -109,6 +115,8 @@ module Demiurge::Createjs
             "imageheight" => 256,
             "tilewidth" => 64,
             "tileheight" => 64,
+            "reg_x" => 0,
+            "reg_y" => 32,
           },
         ]
       end
@@ -117,8 +125,6 @@ module Demiurge::Createjs
         "name" => "#{name}_spritesheet",
         "tilewidth" => 64,
         "tileheight" => 64,
-        "reg_x" => 0,
-        "reg_y" => 32,  # This is hardcoded to ManaSource format in an annoyingly specific way... :-(
         "properties" => {},
         "animations" => @layers.map { |layer| self.class.animation_with_offset("#{layer[:name]}_", layer[:offset]) }.inject({}, &:merge),
         "images" => images,

@@ -56,8 +56,8 @@ class DCJS.CreatejsDisplay.CreatejsSpriteSheet
       imageheight = image.imageheight
       imagetilewidth = image.tilewidth
       imagetileheight = image.tileheight
-      reg_x = 0
-      reg_y = imagetileheight - @tileheight
+      reg_x = if image.reg_x? then image.reg_x else 0
+      reg_y = if image.reg_y? then image.reg_y else imagetileheight - @tileheight
 
       y = margin
       while y <= imageheight - margin - imagetileheight
