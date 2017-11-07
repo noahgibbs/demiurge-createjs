@@ -9,6 +9,9 @@ module Demiurge::Createjs
       @player_by_username ||= {}
 
       return unless player
+      if respond_to?(:on_player_logout)
+        on_player_logout(player.websocket, player)
+      end
       username = player.name
       transport = player.websocket
       player.deregister  # Remove from EngineSync
@@ -16,7 +19,7 @@ module Demiurge::Createjs
       @player_by_transport.delete(transport)
     end
 
-    def on_close(transport:, event:)
+    def on_close(transport, event)
       @player_by_transport ||= {}
       @player_by_username ||= {}
       p [:close, event.code, event.reason].inspect
@@ -44,10 +47,10 @@ module Demiurge::Createjs
       end
 
       # Now create a Player object, indexed by transport
-      if self.respond_to?(:on_create_player)
-        player = on_create_player(transport, username)
+      if self.respond_to?(:on_player_login)
+        player = on_player_login(transport, username)
       else
-        STDERR.puts "PLEASE DEFINE AN on_create_player METHOD IN YOUR GAME OBJECT!"
+        STDERR.puts "PLEASE DEFINE AN on_player_login METHOD IN YOUR GAME OBJECT!"
         return
       end
       @player_by_username[username] = player
