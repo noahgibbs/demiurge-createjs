@@ -40,6 +40,9 @@ module Demiurge::Createjs
       @app.on_auth_message(ws, data[1], *data[2]) if @app && @app.respond_to?(:on_auth_message)
       return
     end
+    if data[0] == "player_action"
+      @app.on_player_action_message(ws, data[1], *data[2]) if @app && @app.respond_to?(:on_player_action_message)
+    end
     @app.on_message(ws, data) if @app && @app.respond_to?(:on_message)
   end
 end

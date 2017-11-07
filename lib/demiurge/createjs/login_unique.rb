@@ -4,6 +4,14 @@
 
 module Demiurge::Createjs
   module LoginUnique
+    def player_by_websocket(websocket)
+      @player_by_transport[websocket]
+    end
+
+    def player_by_name(username)
+      @player_by_username[username]
+    end
+
     def log_out_player(player)
       @player_by_transport ||= {}
       @player_by_username ||= {}

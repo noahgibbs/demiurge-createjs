@@ -84,6 +84,9 @@ class DCJS.WebsocketTransport extends DCJS.Transport
       for msg in @queue
         @ws.send JSON.stringify(msg)
 
+  playerAction: (action_name, args...) ->
+    @sendMessageWithType("player_action", action_name, args...)
+
   onLogin: (@login_handler) ->
 
   onFailedLogin: (@failed_login_handler) ->
