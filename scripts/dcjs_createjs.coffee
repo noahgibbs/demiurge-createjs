@@ -90,6 +90,7 @@ class DCJS.CreatejsDisplay extends DCJS.Display
     console.log "InitMessage w/ canvas #{@canvas}", data
     $("#" + @canvas).width(data.width)
     $("#" + @canvas).height(data.height)
+    @ms_per_tick = data.ms_per_tick
     @createjs_setup()
 
   # This method takes the following keys to its argument:
