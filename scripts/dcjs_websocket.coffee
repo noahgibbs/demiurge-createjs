@@ -37,7 +37,6 @@ class DCJS.WebsocketTransport extends DCJS.Transport
       if data[0] == "login"
         console.log "Logged in as", data[1]["username"]
         if @pending_save_login && @pending_hash
-          console.log "Setting cookies:", data[1]["username"], @pending_hash
           document.cookie = "dcjs_username=#{data[1]["username"]};secure"
           document.cookie = "dcjs_hash=#{@pending_hash};secure"
           @pending_hash = false
@@ -109,6 +108,10 @@ class DCJS.WebsocketTransport extends DCJS.Transport
     @pending_username = username
     @pending_save_login = save_login_info
     @sendMessageWithType("auth", "get_salt", { username: username })
+
+  logout: () ->
+    document.cookie = 'dcjs_username=; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+    document.cookie = 'dcjs_hash=; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
 
   considerAutoLogin: () ->
     cookie_username = document.cookie.replace(/(?:(?:^|.*;\s*)dcjs_username\s*\=\s*([^;]*).*$)|^.*$/, "$1")
