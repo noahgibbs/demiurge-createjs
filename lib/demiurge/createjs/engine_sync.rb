@@ -47,11 +47,13 @@ class Demiurge::Createjs::EngineSync
       end
 
       loc_name, x, y = ::Demiurge::TmxLocation.position_to_loc_coords(item.position)
+      loc = @engine.item_by_name(loc_name)
+      spritesheet = loc.tiles[:spritesheet]
       display_obj = @agents[item.name]
       @players.each do |player_name, player|
         if player.demi_agent.location_name == loc_name
           # The new agent and the player are in the same location
-          x, y = TmxLocation.position_to_coords(item.position)
+          x, y = ::Demiurge::TmxLocation.position_to_coords(item.position)
           player.show_sprites(item.name, display_obj.spritesheet, display_obj.spritestack)
           player.message "displayTeleportStackToPixel", display_obj.stack_name, x * spritesheet[:tilewidth], y * spritesheet[:tileheight], {}
         end
