@@ -17,7 +17,7 @@ module Demiurge::Createjs
     end
 
     ws.on :message do |event|
-      File.open("incoming_traffic.json", "a") { |f| f.write event.data + "\n" } if @record_traffic
+      File.open("log/incoming_traffic.json", "a") { |f| f.write event.data + "\n" } if @record_traffic
       data = MultiJson.load event.data
       handle_message ws, data
     end
