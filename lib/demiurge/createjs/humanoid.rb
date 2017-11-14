@@ -50,8 +50,7 @@ module Demiurge::Createjs
       @name, @format = name, format
       @demi_agent = demi_agent
 
-      coords_string = demi_agent.position.split("#",2)[1] || "0,0"
-      @x, @y = coords_string.split(",").map(&:to_i)
+      @x, @y = ::Demiurge::TmxLocation.position_to_coords(demi_agent.position) if demi_agent.position
 
       @layers = layers.map { |layer| layer.is_a?(String) ? { name: layer } : layer }
       prev_offset = 0
