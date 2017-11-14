@@ -33,7 +33,7 @@ class Demiurge::Createjs::EngineSync
     return if @locations[item.name] || @agents[item.name]  # Already have this one
     if item.is_a?(::Demiurge::TmxLocation)
       @locations[item.name] = ::Demiurge::Createjs::Location.new demi_location: item  # Build a TMX location
-    elsif item.is_a?(::Demiurge::Agent) && item.position # Agents are allowed to have no position and just be instantiable
+    elsif item.is_a?(::Demiurge::Agent)
       if item.get_action("$display")["block"] # This special action is used to pass the Display info through to a Display library.
         builder = Demiurge::Createjs::DisplayBuilder.new(item)
         display_objs = builder.built_objects
@@ -46,15 +46,21 @@ class Demiurge::Createjs::EngineSync
         @agents[item.name] = ::Demiurge::Createjs::Humanoid.new layers, name: item_name, demi_agent: item
       end
 
-      loc_name, x, y = ::Demiurge::TmxLocation.position_to_loc_coords(item.position)
+      show_agent_to_players(item)
+    end
+  end
+
+  def show_agent_to_players(demi_item)
+    if demi_item.position  # Agents are allowed to have no position and just be instantiable
+      loc_name, x, y = ::Demiurge::TmxLocation.position_to_loc_coords(demi_item.position)
       loc = @engine.item_by_name(loc_name)
       spritesheet = loc.tiles[:spritesheet]
-      display_obj = @agents[item.name]
+      display_obj = @agents[demi_item.name]
       @players.each do |player_name, player|
         if player.demi_agent.location_name == loc_name
           # The new agent and the player are in the same location
-          x, y = ::Demiurge::TmxLocation.position_to_coords(item.position)
-          player.show_sprites(item.name, display_obj.spritesheet, display_obj.spritestack)
+          x, y = ::Demiurge::TmxLocation.position_to_coords(demi_item.position)
+          player.show_sprites(demi_item.name, display_obj.spritesheet, display_obj.spritestack)
           player.message "displayTeleportStackToPixel", display_obj.stack_name, x * spritesheet[:tilewidth], y * spritesheet[:tileheight], {}
         end
       end
@@ -121,21 +127,27 @@ class Demiurge::Createjs::EngineSync
 
     if data["type"] == "move"
       agent = @agents[data["item acting"]]
-      pos = data["new_position"].split("#",2)[1]
-      x, y = pos.split(",").map(&:to_i)
+      x, y = ::Demiurge::TmxLocation.position_to_coords(data["new_position"])
       old_x = agent.x
       old_y = agent.y
-      move_messages = agent.walk_to_tile x, y, { "duration" => 0.5 }
+
+      if data["old_location"] != data["new_location"]
+        show_agent_to_players(agent.demi_item)
+      end
+
+      move_messages = agent.walk_to_tile x, y, { "duration" => 0.5 } if x  # Only have move messages if moving to a TmxLocation
       @players.each do |player_name, player|
+        player_loc_name = player.demi_agent.location_name
+        next unless data["old_location"] == player_loc_name || data["new_location"] == player_loc_name
         if data["old_location"] == data["new_location"]
-          player_loc_name = player.demi_agent.location_name
-          # Just moving somebody around in a location
-          next if data["new_location"] != player_loc_name  # Moving around where this player can't see, ignore it
-          move_messages.each do |msg_array|
-            player.message *msg_array
-          end
+          # Just moving somebody between positions in the player's same location
+          move_messages.each { |msg_array| player.message *msg_array }
+        elsif data["old_location"] == player_loc_name
+          # The player has moved away, make them disappear
+          p.message "displayHideSpriteStack", agent.stack_name
+          p.message "displayHideSpriteSheet", agent.spritesheet_name
         else
-          # Moving somebody from one place to another
+          # The moving agent has just gotten here, but the code above will make them appear
         end
       end
       return
