@@ -54,14 +54,16 @@ class Demiurge::Createjs::EngineSync
     if demi_item.position  # Agents are allowed to have no position and just be instantiable
       loc_name, x, y = ::Demiurge::TmxLocation.position_to_loc_coords(demi_item.position)
       loc = @engine.item_by_name(loc_name)
-      spritesheet = loc.tiles[:spritesheet]
-      display_obj = @agents[demi_item.name]
-      @players.each do |player_name, player|
-        if player.demi_agent.location_name == loc_name
-          # The new agent and the player are in the same location
-          x, y = ::Demiurge::TmxLocation.position_to_coords(demi_item.position)
-          player.show_sprites(demi_item.name, display_obj.spritesheet, display_obj.spritestack)
-          player.message "displayTeleportStackToPixel", display_obj.stack_name, x * spritesheet[:tilewidth], y * spritesheet[:tileheight], {}
+      if loc.is_a?(::Demiurge::TmxLocation)
+        spritesheet = loc.tiles[:spritesheet]
+        display_obj = @agents[demi_item.name]
+        @players.each do |player_name, player|
+          if player.demi_agent.location_name == loc_name
+            # The new agent and the player are in the same location
+            x, y = ::Demiurge::TmxLocation.position_to_coords(demi_item.position)
+            player.show_sprites(demi_item.name, display_obj.spritesheet, display_obj.spritestack)
+            player.message "displayTeleportStackToPixel", display_obj.stack_name, x * spritesheet[:tilewidth], y * spritesheet[:tileheight], {}
+          end
         end
       end
     end
@@ -115,7 +117,7 @@ class Demiurge::Createjs::EngineSync
     # Also, move their body out of the room somehow.
     @players.values.each do |p|
       p.message "displayHideSpriteStack", body.stack_name
-      p.message "displayHideSpriteSheet", body.spritesheet_name
+      p.message "displayHideSpriteSheet", body.sheet_name
     end
   end
 
@@ -132,7 +134,7 @@ class Demiurge::Createjs::EngineSync
       old_y = agent.y
 
       if data["old_location"] != data["new_location"]
-        show_agent_to_players(agent.demi_item)
+        show_agent_to_players(agent.demi_agent)
       end
 
       move_messages = agent.walk_to_tile x, y, { "duration" => 0.5 } if x  # Only have move messages if moving to a TmxLocation
@@ -144,8 +146,8 @@ class Demiurge::Createjs::EngineSync
           move_messages.each { |msg_array| player.message *msg_array }
         elsif data["old_location"] == player_loc_name
           # The player has moved away, make them disappear
-          p.message "displayHideSpriteStack", agent.stack_name
-          p.message "displayHideSpriteSheet", agent.spritesheet_name
+          player.message "displayHideSpriteStack", agent.stack_name
+          player.message "displayHideSpriteSheet", agent.sheet_name
         else
           # The moving agent has just gotten here, but the code above will make them appear
         end
