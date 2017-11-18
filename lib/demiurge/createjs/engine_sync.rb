@@ -126,8 +126,9 @@ class Demiurge::Createjs::EngineSync
   # When new data comes in about things in the engine changing, this is what receives that notification.
   def notified(data)
     return if data["type"] == "tick finished"
+    return if data["type"] == "move_from"  # Handled in move_to
 
-    if data["type"] == "move"
+    if data["type"] == "move_to"
       agent = @agents[data["item acting"]]
       x, y = ::Demiurge::TmxLocation.position_to_coords(data["new_position"])
       old_x = agent.x
