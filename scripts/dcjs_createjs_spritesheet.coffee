@@ -4,7 +4,8 @@ class DCJS.CreatejsDisplay.CreatejsSpriteSheet
         [ data.tilewidth, data.tileheight, data.images, data.animations, data.cyclic_animations ]
 
     images = (image.image for image in @images)
-    DCJS.CreatejsDisplay.loader.addHandler () => @imagesLoaded()
+    @loader_handler = () => @imagesLoaded()
+    DCJS.CreatejsDisplay.loader.addHandler @loader_handler
     DCJS.CreatejsDisplay.loader.addImages images
 
     if @images[0].frame_definitions?
@@ -15,6 +16,10 @@ class DCJS.CreatejsDisplay.CreatejsSpriteSheet
         @frame_definitions = @frame_definitions.concat(image_fds)
 
     @loaded = false
+    @handlers = {}
+
+  detach: () ->
+    DCJS.CreatejsDisplay.loader.removeHandler @loader_handler
     @handlers = {}
 
   # This started from CreateJS's SpriteSheet _calculateFrames, but it has slightly different requirements.

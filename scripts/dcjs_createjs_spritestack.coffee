@@ -16,11 +16,13 @@ class DCJS.CreatejsDisplay.CreatejsSpriteStack
     @cur_cyclic_animations = {}
     @cur_played_animations = {}
     @sheet_complete = false
+    @detached = false
 
     unless DCJS.CreatejsDisplay._cyclicTimerStart?
       DCJS.CreatejsDisplay._cyclicTimerStart = (new Date()).getTime()
 
     when_sheet_complete @sheet, () =>
+      return if @detached
       @sheet_complete = true
       stack_y = parseInt(Math.random() * 30000)  # Fix for an obscure agents-walk-through-each-other visual bug
       for layer in data.layers
@@ -40,11 +42,16 @@ class DCJS.CreatejsDisplay.CreatejsSpriteStack
       @handleExposure()
 
       counter = 0
-      createjs.Ticker.addEventListener "tick", () =>
+      @tick_listener = createjs.Ticker.addEventListener "tick", () =>
         counter++
         for sprite_name, anim of @cur_cyclic_animations
           sprite = @sprite_table[sprite_name]
           @_cyclicAnimationHandler sprite, anim
+
+  detach: () ->
+    Tween.removeTweens(this)
+    createJS.Ticker.removeEventListener(@tick_listener)
+    @detached = true
 
   # The "exposure" means the window the player can see of the
   # conceptually gigantic world.  The exposure data structure contains
@@ -94,6 +101,7 @@ class DCJS.CreatejsDisplay.CreatejsSpriteStack
 
   handleExposure: () ->
     return unless @sheet_complete
+    return if @detached  # Stop handling exposures when we're hiding the stack
     exposure = @display.exposure
     @x = parseInt(@x)   # Upper left corner of the spritestack in zone coordinates
     @y = parseInt(@y)
@@ -191,6 +199,7 @@ class DCJS.CreatejsDisplay.CreatejsSpriteStack
 
   animateTile: (layer_name, h, w, anim) ->
     when_sheet_complete @sheet, () =>
+      return if @detached
       layer = @layers[layer_name]
       return if h < @last_start_tile_y || w < @last_start_tile_x
       return if h > @last_end_tile_y || w > @last_end_tile_x
@@ -253,6 +262,7 @@ class DCJS.CreatejsDisplay.CreatejsSpriteStack
   moveToPixel: (x, y, opts) ->
     duration = opts.duration || 1.0
     when_sheet_complete @sheet, () =>
+      return if @detached
       createjs.Tween.get(this)
         .to({x: x, y: y}, duration * 1000.0, createjs.Ease.linear)
         .addEventListener("change", () =>

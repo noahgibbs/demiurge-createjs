@@ -119,6 +119,7 @@ class DCJS.CreatejsDisplay extends DCJS.Display
     @spritesheets[data.name] = new DCJS.CreatejsDisplay.CreatejsSpriteSheet(data)
 
   hideSpriteSheet: (data) ->
+    @spritesheets[data.name].detach()
     delete @spritesheets[data.name]
 
   # Keys in data arg:
@@ -149,6 +150,7 @@ class DCJS.CreatejsDisplay extends DCJS.Display
         @fringe_container.removeChildAt(childIndex)
       else
         childIndex++;
+    @spritestacks[data.name].detach()
     delete @spritestacks[data.name]
 
   startAnimation: (data) ->

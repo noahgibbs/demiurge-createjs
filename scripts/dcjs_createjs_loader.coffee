@@ -19,6 +19,7 @@ loader.removeHandler = (handler) ->
 
 loader.imagesLoaded = () ->
   handler() for handler in loader.handlers
+  loader.handlers = []
 
 loader.errorLoadingImages = () ->
   console.error "LOADER: Couldn't load all images!"
