@@ -1,13 +1,14 @@
 class Demiurge::Createjs::Player
   attr_reader :name
-  attr_reader :demi_agent
+  attr_reader :demi_item
   attr_reader :websocket
+  attr_accessor :display_obj # To be set from EngineSync
 
-  def initialize(websocket:, name:, demi_agent:, width: 640, height: 480, engine_sync:)
+  def initialize(websocket:, name:, demi_item:, width: 640, height: 480, engine_sync:)
     @websocket = websocket
     @engine_sync = engine_sync
     @name = name
-    @demi_agent = demi_agent
+    @demi_item = demi_item
 
     @currently_shown = {}
 

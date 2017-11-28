@@ -1,7 +1,7 @@
 require "demiurge/tmx"
 require "demiurge/createjs/location"
 require "demiurge/createjs/humanoid"
-require "demiurge/createjs/display"
+require "demiurge/createjs/display_dsl"
 
 # A single EngineSync runs on the server, sending messages about the
 # world to the various player connections.
@@ -11,9 +11,9 @@ class Demiurge::Createjs::EngineSync
 
   def initialize(engine)
     @engine = engine
-    @players = {}
+    @players = {}  # Mapping of player name strings to Player objects (not DisplayObjects or Demiurge items)
     @locations = {}
-    @agents = {}
+    @agents = {} # Mapping of item names to DCJS DisplayObjects, normally Humanoids
 
     # Subscribing immediately avoids "oh, I missed that change" race
     # conditions with the engine spinning without the Engine Sync
@@ -87,11 +87,11 @@ class Demiurge::Createjs::EngineSync
     x, y = ::Demiurge::TmxLocation.position_to_coords(agent.position)
     player.send_instant_pan_to_pixel_offset spritesheet[:tilewidth] * x, spritesheet[:tileheight] * y
 
-    # Anybody else there?
+    # Anybody else there? Show them to this player.
     @agents.each do |agent_name, agent|
-      if agent.demi_agent.location_name == loc.name
+      if agent.demi_item.location_name == loc.name
         # There's somebody here
-        x, y = ::Demiurge::TmxLocation.position_to_coords(agent.demi_agent.position)
+        x, y = ::Demiurge::TmxLocation.position_to_coords(agent.demi_item.position)
         player.show_sprites(agent_name, agent.spritesheet, agent.spritestack)
         player.message "displayTeleportStackToPixel", agent_name + "_stack", x * spritesheet[:tilewidth], y * spritesheet[:tileheight], {}
       end
@@ -99,16 +99,15 @@ class Demiurge::Createjs::EngineSync
   end
 
   def remove_player(player)
+    STDERR.puts "Removing player: #{player.name}..."
     if player.nil?
       STDERR.puts "Nil player passed to remove_player!"
       return
     end
-    agent = player.demi_agent
+    agent = player.demi_item
     body = @agents[agent.name] # This is the DCJS Humanoid object
     @players.delete(player.name)
     loc = agent.location
-
-    # TODO: how do we deregister the Demiurge agent?
 
     # Indicate to all present that the player has disappeared
     @engine.send_notification({ "player_name" => player.name }, notification_type: "player_logout", location: loc.name, zone: loc.zone_name, item_acting: agent.name)
@@ -162,7 +161,7 @@ class Demiurge::Createjs::EngineSync
       body = @agents[data["item acting"]]
       speaker_loc_name = speaker.location_name
       @players.each do |player_name, player|
-        player_loc_name = player.demi_agent.location_name
+        player_loc_name = player.demi_item.location_name
         next unless player_loc_name == speaker_loc_name
         player.message "displayTextAnimOverStack", body.stack_name, text, "color" => data["color"] || "red", "font" => data["font"] || "20px Arial", "duration" => data["duration"] || 5.0
       end

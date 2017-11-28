@@ -1,6 +1,7 @@
 # TODO: Move these constants into the class
 
 require "demiurge/tmx"
+require "demiurge/createjs/display_object"
 
 HUMANOID_BASE_ANIMATION = {
   "stand_up" => [0],
@@ -36,22 +37,22 @@ module Demiurge::Createjs
   # You can get humanoid spritesheets from Mana Project games (The Mana World,
   # Evol Online, etc.) and/or from the Liberated Pixel Cup. Check OpenGameArt
   # for LPC-compatible artwork for more.
-  class Humanoid
-    attr_reader :demi_agent
+  class Humanoid < ::Demiurge::Createjs::DisplayObject
+    attr_reader :demi_item
     attr_reader :cur_direction
     attr_reader :cur_anim
-    attr_reader :name
-    attr_reader :x
-    attr_reader :y
+
     attr_reader :spritesheet
     attr_reader :spritestack
 
-    def initialize layers, name:, demi_agent:, format: "png"
-      @name, @format = name, format
-      @demi_agent = demi_agent
+    def initialize layers, name:, demi_item:, format: "png"
+      super name: name, demi_item: demi_item
 
-      @x, @y = ::Demiurge::TmxLocation.position_to_coords(demi_agent.position) if demi_agent.position
+      @format = format
 
+      # This idea of layers and specific animations is *very* specific
+      # to ManaSource-style or Liberated-Pixel-Cup-style humanoid
+      # animations.
       @layers = layers.map { |layer| layer.is_a?(String) ? { name: layer } : layer }
       prev_offset = 0
       @layers.each do |layer|
@@ -167,7 +168,7 @@ module Demiurge::Createjs
     # Options:
     #   "speed" - speed to move one tile of distance
     #   "duration" - duration for entire walk animation (overrides "speed")
-    def walk_to_tile(x, y, options = {})
+    def walk_to_loc_coords(location, x, y, options = {})
       messages = []
 
       x_delta = x - @x
@@ -190,8 +191,8 @@ module Demiurge::Createjs
       # When in doubt, hardcode w/ ManaSource values...
       pixel_x = x * 32
       pixel_y = y * 32
-      if @demi_agent.location.is_a?(::Demiurge::TmxLocation)
-        loc_sheet = @demi_agent.location.tiles[:spritesheet]
+      if @demi_item.location.is_a?(::Demiurge::TmxLocation)
+        loc_sheet = @demi_item.location.tiles[:spritesheet]
         pixel_x = x * loc_sheet[:tilewidth]
         pixel_y = y * loc_sheet[:tileheight]
       end
@@ -199,6 +200,7 @@ module Demiurge::Createjs
       messages += animation_messages("walk_#{@cur_direction}")
       messages.push ["displayMoveStackToPixel", stack_name, pixel_x, pixel_y, { "duration" => time_to_walk } ]
 
+      @location = location
       @x = x
       @y = y
 
@@ -215,8 +217,8 @@ module Demiurge::Createjs
       # When in doubt, hardcode w/ ManaSource values...
       pixel_x = x * 32
       pixel_y = y * 32
-      if @demi_agent.location.is_a?(::Demiurge::TmxLocation)
-        loc_sheet = @demi_agent.location.tiles[:spritesheet]
+      if @demi_item.location.is_a?(::Demiurge::TmxLocation)
+        loc_sheet = @demi_item.location.tiles[:spritesheet]
         pixel_x = x * loc_sheet[:tilewidth]
         pixel_y = y * loc_sheet[:tileheight]
       end

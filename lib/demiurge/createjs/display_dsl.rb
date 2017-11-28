@@ -1,3 +1,5 @@
+# This handles the Display DSL in Demiurge Display blocks.
+
 module Demiurge::Createjs
   def self.build_display_object(block)
     builder = DisplayBuilder.new
@@ -33,7 +35,7 @@ module Demiurge::Createjs
     end
 
     def built_obj
-      Humanoid.new @layers, name: @agent.name, demi_agent: @agent
+      Humanoid.new @layers, name: @agent.name, demi_item: @agent
     end
   end
 end

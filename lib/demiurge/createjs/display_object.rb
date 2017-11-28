@@ -13,7 +13,7 @@ module Demiurge::Createjs
     attr_reader :y
     attr_reader :location  # Most recently-drawn Demiurge location name
 
-    def initialize demi_item:
+    def initialize demi_item:, name:
       @name = name
       @demi_item = demi_item
       @location, @x, @y = ::Demiurge::TmxLocation.position_to_loc_coords(demi_item.position) if demi_item.position
