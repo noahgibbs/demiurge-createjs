@@ -46,14 +46,24 @@ class Demiurge::Createjs::Player
     return if @currently_shown[item_name]
     self.message "displayNewSpriteSheet", spritesheet
     self.message "displayNewSpriteStack", spritestack
-    @currently_shown[item_name] = true
+    @currently_shown[item_name] = [ spritesheet["name"], spritestack["name"] ]
   end
 
   def hide_sprites(item_name)
     return unless @currently_shown[item_name]
-    self.message "displayHideSpriteStack", spritestack["name"]
-    self.message "displayHideSpriteSheet", spritesheet["name"]
+    stack_name, sheet_name = @currently_shown[item_name]
+    self.message "displayHideSpriteStack", stack_name
+    self.message "displayHideSpriteSheet", sheet_name
     @currently_shown.delete(item_name)
+  end
+
+  def hide_all_sprites
+    @currently_shown.each do |item_name, entry|
+      stack_name, sheet_name = *entry
+      self.message "displayHideSpriteSheet", sheet_name
+      self.message "displayHideSpriteStack", stack_name
+    end
+    @currently_shown = {}
   end
 
   # Pan the display to a pixel offset (upper-left corner) in the current spritestack
