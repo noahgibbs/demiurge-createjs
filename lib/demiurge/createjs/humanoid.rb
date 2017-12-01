@@ -1,35 +1,5 @@
-# TODO: Move these constants into the class
-
 require "demiurge/tmx"
 require "demiurge/createjs/display_object"
-
-HUMANOID_BASE_ANIMATION = {
-  "stand_up" => [0],
-  "walk_up" => [1, 8, "walk_up", 0.33],
-  "stand_left" => [9],
-  "walk_left" => [10, 17, "walk_left", 0.33],
-  "stand_down" => [18],
-  "walk_down" => [19, 26, "walk_down", 0.33],
-  "stand_right" => [27],
-  "walk_right" => [28, 35, "walk_right", 0.33],
-  "hurt" => [36, 41, "hurt", 0.33],
-  "slash_up" => [42, 47, "slash_up", 0.33],
-  "slash_left" => [48, 53, "slash_left", 0.33],
-  "slash_down" => [54, 59, "slash_down", 0.33],
-  "slash_right" => [60, 65, "slash_right", 0.33],
-  "spellcast_up" => [66, 72, "spellcast_up", 0.33],
-  "spellcast_left" => [73, 79, "spellcast_left", 0.33],
-  "spellcast_down" => [80, 86, "spellcast_down", 0.33],
-  "spellcast_right" => [87, 93, "spellcast_right", 0.33],
-}
-
-HUMANOID_IMAGE_OFFSETS = {
-  :walkcycle => 0,
-  :hurt => 36,
-  :slash => 42,
-  :spellcast => 66,
-  :total => 94
-}
 
 module Demiurge::Createjs
   # A Humanoid corresponds pretty specifically to The Mana Project's idea of a humanoid.
@@ -38,15 +8,11 @@ module Demiurge::Createjs
   # Evol Online, etc.) and/or from the Liberated Pixel Cup. Check OpenGameArt
   # for LPC-compatible artwork for more.
   class Humanoid < ::Demiurge::Createjs::DisplayObject
-    attr_reader :demi_item
-    attr_reader :cur_direction
-    attr_reader :cur_anim
-
     attr_reader :spritesheet
     attr_reader :spritestack
 
-    def initialize layers, name:, demi_item:, format: "png"
-      super name: name, demi_item: demi_item
+    def initialize layers, name:, demi_item:, format: "png", engine_sync:
+      super name: name, demi_item: demi_item, engine_sync: engine_sync
 
       @format = format
 
@@ -61,14 +27,12 @@ module Demiurge::Createjs
         prev_offset = layer[:offset]
       end
 
-      @cur_direction = "right"
-      @cur_anim = "stand"
       @spritesheet = build_spritesheet_json
       @spritestack = build_spritestack_json
     end
 
     def stack_name
-      "#{name}_stack"
+      name
     end
 
     def sheet_name
@@ -122,7 +86,7 @@ module Demiurge::Createjs
       end
 
       {
-        "name" => "#{name}_spritesheet",
+        "name" => sheet_name,
         "tilewidth" => 64,
         "tileheight" => 64,
         "properties" => {},
@@ -164,6 +128,39 @@ module Demiurge::Createjs
       end
     end
 
+    def move_for_player(player, old_position, new_position, options = {})
+      old_loc_name, old_x, old_y = ::Demiurge::TmxLocation.position_to_loc_coords(old_position)
+      new_loc_name, new_x, new_y = ::Demiurge::TmxLocation.position_to_loc_coords(new_position)
+
+      x_delta = new_x - old_x
+      y_delta = new_y - old_y
+
+      if x_delta.abs > y_delta.abs
+        cur_direction = x_delta > 0 ? "right" : "left"
+      else
+        cur_direction = y_delta > 0 ? "down" : "up"
+      end
+
+      if options["duration"]
+        time_to_walk = options["duration"]
+      else
+        speed = options["speed"] || 1.0
+        distance = Math.sqrt(x_delta ** 2 + y_delta ** 2)
+        time_to_walk = distance / speed
+      end
+
+      # When in doubt, hardcode w/ ManaSource values...
+      pixel_x = x * 32
+      pixel_y = y * 32
+      if @location_spritesheet
+        pixel_x = x * @location_spritesheet[:tilewidth]
+        pixel_y = y * @location_spritesheet[:tileheight]
+      end
+
+      animation_messages("walk_#{cur_direction}").each { |msg| player.message msg }
+      player.message ["displayMoveStackToPixel", stack_name, pixel_x, pixel_y, { "duration" => time_to_walk } ]
+    end
+
     # Calculate messages for animations to move in a line to a tile.
     # Options:
     #   "speed" - speed to move one tile of distance
@@ -175,9 +172,9 @@ module Demiurge::Createjs
       y_delta = y - @y
 
       if x_delta.abs > y_delta.abs
-        @cur_direction = x_delta > 0 ? "right" : "left"
+        cur_direction = x_delta > 0 ? "right" : "left"
       else
-        @cur_direction = y_delta > 0 ? "down" : "up"
+        cur_direction = y_delta > 0 ? "down" : "up"
       end
 
       if options["duration"]
@@ -197,7 +194,7 @@ module Demiurge::Createjs
         pixel_y = y * loc_sheet[:tileheight]
       end
 
-      messages += animation_messages("walk_#{@cur_direction}")
+      messages += animation_messages("walk_#{cur_direction}")
       messages.push ["displayMoveStackToPixel", stack_name, pixel_x, pixel_y, { "duration" => time_to_walk } ]
 
       @location = location
@@ -208,7 +205,7 @@ module Demiurge::Createjs
       #EM.add_timer(time_to_walk) do
       #  # Still walking as a result of this call? If so, now stop.
       #  if @anim_counter == cur_anim_counter
-      #    send_animation "stand_#{@cur_direction}"
+      #    send_animation "stand_#{cur_direction}"
       #  end
       #end
     end
@@ -243,6 +240,34 @@ module Demiurge::Createjs
       end
       anim
     end
+
+    HUMANOID_IMAGE_OFFSETS = {
+      :walkcycle => 0,
+      :hurt => 36,
+      :slash => 42,
+      :spellcast => 66,
+      :total => 94
+    }
+
+    HUMANOID_BASE_ANIMATION = {
+      "stand_up" => [0],
+      "walk_up" => [1, 8, "walk_up", 0.33],
+      "stand_left" => [9],
+      "walk_left" => [10, 17, "walk_left", 0.33],
+      "stand_down" => [18],
+      "walk_down" => [19, 26, "walk_down", 0.33],
+      "stand_right" => [27],
+      "walk_right" => [28, 35, "walk_right", 0.33],
+      "hurt" => [36, 41, "hurt", 0.33],
+      "slash_up" => [42, 47, "slash_up", 0.33],
+      "slash_left" => [48, 53, "slash_left", 0.33],
+      "slash_down" => [54, 59, "slash_down", 0.33],
+      "slash_right" => [60, 65, "slash_right", 0.33],
+      "spellcast_up" => [66, 72, "spellcast_up", 0.33],
+      "spellcast_left" => [73, 79, "spellcast_left", 0.33],
+      "spellcast_down" => [80, 86, "spellcast_down", 0.33],
+      "spellcast_right" => [87, 93, "spellcast_right", 0.33],
+    }
 
   end
 end

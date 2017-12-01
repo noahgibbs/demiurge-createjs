@@ -1,12 +1,13 @@
 # Demiurge-Createjs
 
-Demiurge-Createjs provides Websocket-based transport using the Faye
-library and CreateJS-based display for HTML games to use Demiurge.
+Demiurge-Createjs ("DCJS" for short) provides Websocket-based
+transport using the Faye library and CreateJS-based display for HTML
+games to use Demiurge.
 
 Demiurge, in turn, is a library for easy creation of gamelike physics
 and artificial intelligence using Ruby.
 
-Relevant technologies used by Demiurge-Createjs include:
+Relevant technologies used by DCJS include:
 
 * Websockets and other browser publish/subscribe messages using Faye
 * CreateJS
@@ -42,9 +43,9 @@ Or install it yourself as:
 
 ## Usage
 
-Ordinarily you'll use Demiurge-Createjs by creating a piece of
-software, such as a game, that uses it. Add the demiurge-createjs gem
-to your application's Gemfile or gemspec and run "bundle" to install.
+Ordinarily you'll use DCJS by creating a piece of software, usually a
+game, that uses it. Add the demiurge-createjs gem to your
+application's Gemfile or gemspec and run "bundle" to install.
 
 This gem includes a sample config.ru file, showing how to serve the
 appropriate HTML and JavaScript content for your browser-based game

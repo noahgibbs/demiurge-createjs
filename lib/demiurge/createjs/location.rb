@@ -1,12 +1,11 @@
-class Demiurge::Createjs::Location
+class Demiurge::Createjs::Location < ::Demiurge::Createjs::DisplayObject
   attr_reader :spritesheet
   attr_reader :spritestack
-  attr_reader :demi_location
 
   # Track the visible output portion of a Demiurge location
-  def initialize(demi_location:)
-    @demi_location = demi_location
-    tiles = demi_location.tiles
+  def initialize(demi_item:, name:, engine_sync:)
+    super
+    tiles = @demi_item.tiles
     @spritesheet = tiles[:spritesheet]
     @spritestack = tiles[:spritestack]
   end

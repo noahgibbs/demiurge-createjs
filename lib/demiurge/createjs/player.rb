@@ -1,3 +1,11 @@
+# A Player object handles the network connection to a single browser,
+# via a protocol over Websockets. It also keeps track of what visual
+# objects are currently visible in the browser, and handles panning
+# (moving the window of visible display around.)
+
+# A Player has no direct display-able presence, but instead can
+# optionally have a DisplayObject to represent it.
+
 class Demiurge::Createjs::Player
   attr_reader :name
   attr_reader :demi_item
@@ -49,9 +57,18 @@ class Demiurge::Createjs::Player
     @currently_shown[item_name] = [ spritesheet["name"], spritestack["name"] ]
   end
 
+  def show_sprites_at_position(item_name, spritesheet, spritestack, position)
+    show_sprites(item_name, spritesheet, spritestack)
+    location_name, x, y = ::Demiurge::TmxLocation.position_to_loc_coords(position)
+    if display_obj.location_name != location_name
+      raise "Trying to show sprite #{item_name.inspect} at location #{location_name.inspect}, not current location #{player.display_obj.location_name.inspect}!"
+    end
+    self.message "displayTeleportStackToPixel", item_name, x * self.display_obj.location_spritesheet[:tilewidth], y * self.display_obj.location_spritesheet[:tileheight], {}
+  end
+
   def hide_sprites(item_name)
     return unless @currently_shown[item_name]
-    stack_name, sheet_name = @currently_shown[item_name]
+    sheet_name, stack_name = @currently_shown[item_name]
     self.message "displayHideSpriteStack", stack_name
     self.message "displayHideSpriteSheet", sheet_name
     @currently_shown.delete(item_name)
@@ -59,7 +76,7 @@ class Demiurge::Createjs::Player
 
   def hide_all_sprites
     @currently_shown.each do |item_name, entry|
-      stack_name, sheet_name = *entry
+      sheet_name, stack_name = *entry
       self.message "displayHideSpriteSheet", sheet_name
       self.message "displayHideSpriteStack", stack_name
     end
