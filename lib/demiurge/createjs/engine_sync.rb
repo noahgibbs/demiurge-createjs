@@ -220,7 +220,7 @@ class Demiurge::Createjs::EngineSync
         show_location_to_player(acting_player, data["new_position"], @display_objs[loc_name]) if loc_do
       else
         # Player moved in same location, pan to new position
-        #actor_do.move_for_player(acting_player, data["old_position"], data["new_position"], { "duration" => 0.5 })
+        actor_do.move_for_player(acting_player, data["old_position"], data["new_position"], { "duration" => 0.5 })
         acting_player.send_instant_pan_to_pixel_offset spritesheet[:tilewidth] * x, spritesheet[:tileheight] * y
       end
     end

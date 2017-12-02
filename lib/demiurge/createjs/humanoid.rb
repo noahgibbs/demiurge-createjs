@@ -157,8 +157,8 @@ module Demiurge::Createjs
         pixel_y = y * @location_spritesheet[:tileheight]
       end
 
-      animation_messages("walk_#{cur_direction}").each { |msg| player.message msg }
-      player.message ["displayMoveStackToPixel", stack_name, pixel_x, pixel_y, { "duration" => time_to_walk } ]
+      animation_messages("walk_#{cur_direction}").each { |msg| player.message *msg }
+      player.message "displayMoveStackToPixel", stack_name, pixel_x, pixel_y, { "duration" => time_to_walk }
     end
 
     # Calculate messages for animations to move in a line to a tile.
