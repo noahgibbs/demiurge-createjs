@@ -43,75 +43,75 @@ module Demiurge::Createjs
       images = (@layers.zip(0..(@layers.size - 1))).flat_map do |layer, index|
         [
           {
-            "firstgid" => HUMANOID_IMAGE_OFFSETS[:walkcycle] + layer[:offset],
-            "image" => "/sprites/#{layer[:name]}_walkcycle.#{@format}",
-            "imagewidth" => 576,
-            "imageheight" => 256,
-            "tilewidth" => 64,
-            "tileheight" => 64,
-            "reg_x" => 0,
-            "reg_y" => 32,  # This is hardcoded to ManaSource format in an annoyingly specific way... :-(
+            :firstgid => HUMANOID_IMAGE_OFFSETS[:walkcycle] + layer[:offset],
+            :image => "/sprites/#{layer[:name]}_walkcycle.#{@format}",
+            :imagewidth => 576,
+            :imageheight => 256,
+            :tilewidth => 64,
+            :tileheight => 64,
+            :reg_x => 0,
+            :reg_y => 32,  # This is hardcoded to ManaSource format in an annoyingly specific way... :-(
           },
           {
-            "firstgid" => HUMANOID_IMAGE_OFFSETS[:hurt] + layer[:offset],
-            "image" => "/sprites/#{layer[:name]}_hurt.#{@format}",
-            "imagewidth" => 384,
-            "imageheight" => 64,
-            "tilewidth" => 64,
-            "tileheight" => 64,
-            "reg_x" => 0,
-            "reg_y" => 32,
+            :firstgid => HUMANOID_IMAGE_OFFSETS[:hurt] + layer[:offset],
+            :image => "/sprites/#{layer[:name]}_hurt.#{@format}",
+            :imagewidth => 384,
+            :imageheight => 64,
+            :tilewidth => 64,
+            :tileheight => 64,
+            :reg_x => 0,
+            :reg_y => 32,
           },
           {
-            "firstgid" => HUMANOID_IMAGE_OFFSETS[:slash] + layer[:offset],
-            "image" => "/sprites/#{layer[:name]}_slash.#{@format}",
-            "imagewidth" => 384,
-            "imageheight" => 256,
-            "tilewidth" => 64,
-            "tileheight" => 64,
-            "reg_x" => 0,
-            "reg_y" => 32,
+            :firstgid => HUMANOID_IMAGE_OFFSETS[:slash] + layer[:offset],
+            :image => "/sprites/#{layer[:name]}_slash.#{@format}",
+            :imagewidth => 384,
+            :imageheight => 256,
+            :tilewidth => 64,
+            :tileheight => 64,
+            :reg_x => 0,
+            :reg_y => 32,
           },
           {
-            "firstgid" => HUMANOID_IMAGE_OFFSETS[:spellcast] + layer[:offset],
-            "image" => "/sprites/#{layer[:name]}_spellcast.#{@format}",
-            "imagewidth" => 448,
-            "imageheight" => 256,
-            "tilewidth" => 64,
-            "tileheight" => 64,
-            "reg_x" => 0,
-            "reg_y" => 32,
+            :firstgid => HUMANOID_IMAGE_OFFSETS[:spellcast] + layer[:offset],
+            :image => "/sprites/#{layer[:name]}_spellcast.#{@format}",
+            :imagewidth => 448,
+            :imageheight => 256,
+            :tilewidth => 64,
+            :tileheight => 64,
+            :reg_x => 0,
+            :reg_y => 32,
           },
         ]
       end
 
       {
-        "name" => sheet_name,
-        "tilewidth" => 64,
-        "tileheight" => 64,
-        "properties" => {},
-        "animations" => @layers.map { |layer| self.class.animation_with_offset("#{layer[:name]}_", layer[:offset]) }.inject({}, &:merge),
-        "images" => images,
+        :name => sheet_name,
+        :tilewidth => 64,
+        :tileheight => 64,
+        :properties => {},
+        :animations => @layers.map { |layer| self.class.animation_with_offset("#{layer[:name]}_", layer[:offset]) }.inject({}, &:merge),
+        :images => images,
       }
     end
 
     def build_spritestack_json
       layers = @layers.map do |layer|
         {
-          "name" => layer[:name],
-          "data" => [ [ layer[:offset] + HUMANOID_BASE_ANIMATION["stand_down"][0] ] ],
-          "visible" => true,
-          "opacity" => 1.0,
-          "z" => 0.0,
+          :name => layer[:name],
+          :data => [ [ layer[:offset] + HUMANOID_BASE_ANIMATION["stand_down"][0] ] ],
+          :visible => true,
+          :opacity => 1.0,
+          :z => 0.0,
         }
       end
 
       {
-        "name" => stack_name,
-        "width" => 1,
-        "height" => 1,
-        "spritesheet" => "#{name}_spritesheet",
-        "layers" => layers,
+        :name => stack_name,
+        :width => 1,
+        :height => 1,
+        :spritesheet => "#{name}_spritesheet",
+        :layers => layers,
       }
     end
 

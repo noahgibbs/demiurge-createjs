@@ -161,60 +161,7 @@ class Demiurge::Createjs::EngineSync
     # and move-to have the same fields except location, zone and
     # type. So only pay attention to the move_to.
     if data["type"] == "move_to"
-      actor_do = @display_objs[data["item acting"]]
-      x, y = ::Demiurge::TmxLocation.position_to_coords(data["new_position"])
-      old_x = actor_do.x
-      old_y = actor_do.y
-      loc_name = data["new_location"]
-      if @display_objs[loc_name]
-        spritesheet = @display_objs[loc_name].spritesheet
-        spritestack = @display_objs[loc_name].spritestack
-      else
-        STDERR.puts "Moving to a non-displayed location, not showing..."
-      end
-
-      actor_do.position = data["new_position"]
-
-      # An object just moved to a new location - show it to everybody in the new location.
-      if data["old_location"] != data["new_location"]
-        show_display_obj_to_players(actor_do)
-      end
-
-      # Is it a player that just moved? If so, update them specifically.
-      acting_player = @players[data["item acting"]]
-      if acting_player
-        if data["old_location"] != data["new_location"]
-          ## Show the new location's sprites to the player who is moving
-          show_location_to_player(acting_player, data["new_position"], @display_objs[loc_name])
-        else
-          # Player moved in same location, pan to new position
-          #actor_do.move_for_player(acting_player, data["old_position"], data["new_position"], { "duration" => 0.5 })
-          acting_player.send_instant_pan_to_pixel_offset spritesheet[:tilewidth] * x, spritesheet[:tileheight] * y
-        end
-      end
-
-      # Whether it's a player moving or something else, update all the
-      # players who just saw the item move, disappear or appear.
-      @players.each do |player_name, player|
-        next if player_name == data["item acting"]  # Already handled it if this player is the one moving.
-        player_loc_name = player.display_obj ? player.display_obj.location_name : nil
-        next unless player_loc_name            # Player has no location? We don't update them.
-
-        if data["old_location"] == data["new_location"]
-          next unless player_loc_name == data["new_location"]
-          actor_do.move_for_player(player, data["old_position"], data["new_position"], { "duration" => 0.5 })
-        elsif player_loc_name == data["old_location"]
-          # The item changed rooms and the player is in the old
-          # location. Hide the item.
-          actor_do.hide_from_player(player)
-        elsif player_loc_name == data["new_location"]
-          # The item changed rooms and the player is in the new
-          # location. Show the item.
-          actor_do.show_to_player(player)
-        end
-      end
-
-      return  # Handled move_to, let's get out of here.
+      return notified_of_move_to(data)
     end
 
     if data["type"] == "speech"
@@ -244,4 +191,61 @@ class Demiurge::Createjs::EngineSync
     end
   end
 
+  def notified_of_move_to(data)
+    actor_do = @display_objs[data["item acting"]]
+    x, y = ::Demiurge::TmxLocation.position_to_coords(data["new_position"])
+    old_x = actor_do.x
+    old_y = actor_do.y
+    loc_name = data["new_location"]
+    loc_do = @display_objs[loc_name]
+    if loc_do
+      spritesheet = loc_do.spritesheet
+      spritestack = loc_do.spritestack
+    else
+      STDERR.puts "Moving to a non-displayed location #{loc_name.inspect}, no display object found..."
+    end
+
+    actor_do.position = data["new_position"]
+
+    # An object just moved to a new location - show it to everybody in the new location, if it's a displayable loction.
+    if data["old_location"] != data["new_location"]
+      show_display_obj_to_players(actor_do) if loc_do
+    end
+
+    # Is it a player that just moved? If so, update them specifically.
+    acting_player = @players[data["item acting"]]
+    if acting_player
+      if data["old_location"] != data["new_location"]
+        ## Show the new location's sprites to the player who is moving, if the new location has sprites
+        show_location_to_player(acting_player, data["new_position"], @display_objs[loc_name]) if loc_do
+      else
+        # Player moved in same location, pan to new position
+        #actor_do.move_for_player(acting_player, data["old_position"], data["new_position"], { "duration" => 0.5 })
+        acting_player.send_instant_pan_to_pixel_offset spritesheet[:tilewidth] * x, spritesheet[:tileheight] * y
+      end
+    end
+
+    # Whether it's a player moving or something else, update all the
+    # players who just saw the item move, disappear or appear.
+    @players.each do |player_name, player|
+      next if player_name == data["item acting"]  # Already handled it if this player is the one moving.
+      player_loc_name = player.display_obj ? player.display_obj.location_name : nil
+      next unless player_loc_name            # Player has no location? We don't update them.
+
+      if data["old_location"] == data["new_location"]
+        next unless player_loc_name == data["new_location"]
+        STDERR.puts "Showing item #{data["item acting"].inspect} moving for player #{player.name.inspect}..."
+        actor_do.move_for_player(player, data["old_position"], data["new_position"], { "duration" => 0.5 })
+      elsif player_loc_name == data["old_location"]
+        # The item changed rooms and the player is in the old
+        # location. Hide the item.
+        actor_do.hide_from_player(player)
+      elsif player_loc_name == data["new_location"]
+        # The item changed rooms and the player is in the new
+        # location. Show the item, if it moved to a displayable
+        # location.
+        actor_do.show_to_player(player) if loc_do
+      end
+    end
+  end
 end

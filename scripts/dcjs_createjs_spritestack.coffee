@@ -49,8 +49,8 @@ class DCJS.CreatejsDisplay.CreatejsSpriteStack
           @_cyclicAnimationHandler sprite, anim
 
   detach: () ->
-    Tween.removeTweens(this)
-    createJS.Ticker.removeEventListener(@tick_listener)
+    createjs.Tween.removeTweens(this)
+    createjs.Ticker.removeEventListener(@tick_listener)
     @detached = true
 
   # The "exposure" means the window the player can see of the

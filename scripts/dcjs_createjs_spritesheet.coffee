@@ -16,11 +16,11 @@ class DCJS.CreatejsDisplay.CreatejsSpriteSheet
         @frame_definitions = @frame_definitions.concat(image_fds)
 
     @loaded = false
-    @handlers = {}
+    @handlers = { "complete": [] }
 
   detach: () ->
     DCJS.CreatejsDisplay.loader.removeHandler @loader_handler
-    @handlers = {}
+    @handlers = { "complete": [] }
 
   # This started from CreateJS's SpriteSheet _calculateFrames, but it has slightly different requirements.
   # CreateJS frame specifications are an array of the form:
@@ -124,7 +124,6 @@ class DCJS.CreatejsDisplay.CreatejsSpriteSheet
   #
   addEventListener: (event, handler) ->
     if event == "complete"
-      @handlers["complete"] = [] unless @handlers["complete"]?
       @handlers["complete"].push handler
     else
       console.error "Unknown event #{event} on spritesheet!"

@@ -54,10 +54,14 @@ class Demiurge::Createjs::Player
     return if @currently_shown[item_name]
     self.message "displayNewSpriteSheet", spritesheet
     self.message "displayNewSpriteStack", spritestack
-    @currently_shown[item_name] = [ spritesheet["name"], spritestack["name"] ]
+    @currently_shown[item_name] = [ spritesheet[:name], spritestack[:name] ]
   end
 
   def show_sprites_at_position(item_name, spritesheet, spritestack, position)
+    unless display_obj.location_spritesheet
+      STDERR.puts "Not showing when at location #{display_obj.location_name}, item is at #{@demi_item.location_name}, something's odd."
+      return
+    end
     show_sprites(item_name, spritesheet, spritestack)
     location_name, x, y = ::Demiurge::TmxLocation.position_to_loc_coords(position)
     if display_obj.location_name != location_name
@@ -69,16 +73,16 @@ class Demiurge::Createjs::Player
   def hide_sprites(item_name)
     return unless @currently_shown[item_name]
     sheet_name, stack_name = @currently_shown[item_name]
-    self.message "displayHideSpriteStack", stack_name
-    self.message "displayHideSpriteSheet", sheet_name
+    self.message "displayHideSpriteStack", "name" => stack_name
+    self.message "displayHideSpriteSheet", "name" => sheet_name
     @currently_shown.delete(item_name)
   end
 
   def hide_all_sprites
     @currently_shown.each do |item_name, entry|
       sheet_name, stack_name = *entry
-      self.message "displayHideSpriteSheet", sheet_name
-      self.message "displayHideSpriteStack", stack_name
+      self.message "displayHideSpriteStack", "name" => stack_name
+      self.message "displayHideSpriteSheet", "name" => sheet_name
     end
     @currently_shown = {}
   end
