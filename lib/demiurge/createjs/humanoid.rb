@@ -150,11 +150,11 @@ module Demiurge::Createjs
       end
 
       # When in doubt, hardcode w/ ManaSource values...
-      pixel_x = x * 32
-      pixel_y = y * 32
+      pixel_x = new_x * 32
+      pixel_y = new_y * 32
       if @location_spritesheet
-        pixel_x = x * @location_spritesheet[:tilewidth]
-        pixel_y = y * @location_spritesheet[:tileheight]
+        pixel_x = new_x * @location_spritesheet[:tilewidth]
+        pixel_y = new_y * @location_spritesheet[:tileheight]
       end
 
       animation_messages("walk_#{cur_direction}").each { |msg| player.message *msg }

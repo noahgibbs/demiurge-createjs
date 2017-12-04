@@ -75,10 +75,6 @@ class DCJS.CreatejsDisplay extends DCJS.Display
     @load_handler = handler
     DCJS.CreatejsDisplay.loader.setHandler handler
 
-  # TODO: tie this in neatly w/ on_load_update,
-  # map events properly, document them
-  addEventListener: (event, handler) ->
-
   message: (msgName, argArray) ->
     handler = messageMap[msgName]
     unless handler?
@@ -139,17 +135,21 @@ class DCJS.CreatejsDisplay extends DCJS.Display
 
   hideSpriteStack: (data) ->
     childIndex = 0
-    while @layer_container.getChildAt(childIndex) is not null
-      if @layer_container.getChildAt(childIndex).stack_name == data.name
+    child = @layer_container.getChildAt(0)
+    while child?
+      if child.stack_name == data.name
         @layer_container.removeChildAt(childIndex)
       else
         childIndex++
+      child = @layer_container.getChildAt(childIndex)
     childIndex = 0
-    while @fringe_container.getChildAt(childIndex) is not null
-      if @fringe_container.getChildAt(childIndex).stack_name == data.name
+    child = @fringe_container.getChildAt(0)
+    while child?
+      if child.stack_name == data.name
         @fringe_container.removeChildAt(childIndex)
       else
         childIndex++;
+      child = @fringe_container.getChildAt(childIndex)
     @spritestacks[data.name].detach()
     delete @spritestacks[data.name]
 
@@ -175,6 +175,8 @@ class DCJS.CreatejsDisplay extends DCJS.Display
 
   instantPanToPixel: (x, y) ->
     @exposure = { x: x, y: y, width: @display_width, height: @display_height }
+    for name, stack of @spritestacks
+      stack.handleExposure()
 
   panToPixel: (new_exp_x, new_exp_y, options) ->
     duration = options.duration || 1.0

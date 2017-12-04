@@ -178,6 +178,7 @@ class DCJS.CreatejsDisplay.CreatejsSpriteStack
               sprite.stack_y = layer.stack_y
               sprite.w_coord = w_ctr
               sprite.h_coord = h_ctr
+              sprite.stack_name = @name
               @display.fringe_container.addChild sprite
             else
               layer.container.addChild sprite
@@ -234,6 +235,7 @@ class DCJS.CreatejsDisplay.CreatejsSpriteStack
   # animations unevenly when the load in the browser changes. So instead, we
   # calculate what part of the cycle we're on and set the frame appropriately.
   _cyclicAnimationHandler: (sprite, anim) ->
+    return if @detached
     now = (new Date()).getTime()
     anim_cycle_time = anim.cycle_time
     offset = (now - DCJS.CreatejsDisplay._cyclicTimerStart) % anim_cycle_time
