@@ -19,10 +19,16 @@ module ::Demiurge::Createjs
     def initialize demi_item:, name:, engine_sync:
       @name = name
       @demi_item = demi_item
+      @demi_name = demi_item.name  # Usually the same as @name
       @engine_sync = engine_sync
       raise "Non-matching name and Demiurge name!" if @demi_item && @demi_item.name != name
       @demi_engine = demi_item.engine
       self.position = demi_item.position if demi_item && demi_item.position
+    end
+
+    def demiurge_reloaded
+      @demi_item = @demi_engine.item_by_name(@demi_name)
+      @location_item = @demi_engine.item_by_name(@location_name)
     end
 
     def position=(new_position)

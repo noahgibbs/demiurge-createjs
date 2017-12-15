@@ -133,7 +133,14 @@ class Demiurge::Createjs::EngineSync
   def add_player(player)
     @players[player.name] = player
     player.display_obj = @display_objs[player.name]
-    loc_name = player.display_obj.location_name
+    if player.display_obj
+      loc_name = player.display_obj.location_name
+      player_position = player.display_obj.position
+    else
+      # Freshly-created? No display object yet? Show the Demiurge location instead of DCJS
+      loc_name = player.demi_item.location_name
+      player_position = player.demi_item.position
+    end
     loc_do = @display_objs[loc_name]
 
     # Do we have a display object for that player's location?
@@ -142,7 +149,7 @@ class Demiurge::Createjs::EngineSync
       return
     end
 
-    show_location_to_player(player, player.display_obj.position, loc_do)
+    show_location_to_player(player, player_position, loc_do)
   end
 
   # The logout action happens before this does, which may affect what's where.
@@ -156,6 +163,7 @@ class Demiurge::Createjs::EngineSync
   def notified(data)
     return if data["type"] == "tick finished"
     return if data["type"] == "move_from"
+    return if data["type"] == "load_state_start"
 
     # We subscribe to all events in all locations, and the move-from
     # and move-to have the same fields except location, zone and
@@ -164,10 +172,28 @@ class Demiurge::Createjs::EngineSync
       return notified_of_move_to(data)
     end
 
+    if data["type"] == "load_state_end"
+      @display_objs.each_value do |display_obj|
+        display_obj.demiurge_reloaded
+      end
+      return
+    end
+
+    if data["type"] == "intention_cancelled"
+      acting_item = data["actor"]
+      if @players[acting_item]
+        # This was a player action that was cancelled
+        player = @players[acting_item]
+        player.message "displayTextAnimOverStack", player.display_obj.stack_name, data["reason"], "color" => "red", "font" => "20px Arial", "duration" => 3.0
+        return
+      end
+      return
+    end
+
     if data["type"] == "speech"
       text = data["words"] || "ADD WORDS TO SPEECH NOTIFICATION!"
-      speaker = @engine.item_by_name(data["item acting"])
-      body = @display_objs[data["item acting"]]
+      speaker = @engine.item_by_name(data["actor"])
+      body = @display_objs[data["actor"]]
       speaker_loc_name = speaker.location_name
       @players.each do |player_name, player|
         player_loc_name = player.display_obj.location_name
@@ -180,19 +206,16 @@ class Demiurge::Createjs::EngineSync
 
     # This notification will catch new player bodies, instantiated agents and whatnot.
     if data["type"] == "new item"
-      item = @engine.item_by_name data["item acting"]
+      item = @engine.item_by_name data["actor"]
       register_engine_item(item)
       return
     end
 
-    # Right now, every unrecognized message type gets blasted out to every player. Expect this to change.
-    @players.each do |player_name, player|
-      player.message "simNotification", data
-    end
+    STDERR.puts "Unhandled notification of type #{data["type"].inspect}..."
   end
 
   def notified_of_move_to(data)
-    actor_do = @display_objs[data["item acting"]]
+    actor_do = @display_objs[data["actor"]]
     x, y = ::Demiurge::TmxLocation.position_to_coords(data["new_position"])
     old_x = actor_do.x
     old_y = actor_do.y
@@ -213,7 +236,7 @@ class Demiurge::Createjs::EngineSync
     end
 
     # Is it a player that just moved? If so, update them specifically.
-    acting_player = @players[data["item acting"]]
+    acting_player = @players[data["actor"]]
     if acting_player
       if data["old_location"] != data["new_location"]
         ## Show the new location's sprites to the player who is moving, if the new location has sprites
@@ -228,13 +251,13 @@ class Demiurge::Createjs::EngineSync
     # Whether it's a player moving or something else, update all the
     # players who just saw the item move, disappear or appear.
     @players.each do |player_name, player|
-      next if player_name == data["item acting"]  # Already handled it if this player is the one moving.
+      next if player_name == data["actor"]  # Already handled it if this player is the one moving.
       player_loc_name = player.display_obj ? player.display_obj.location_name : nil
       next unless player_loc_name            # Player has no location? We don't update them.
 
       if data["old_location"] == data["new_location"]
         next unless player_loc_name == data["new_location"]
-        STDERR.puts "Showing item #{data["item acting"].inspect} moving for player #{player.name.inspect}..."
+        STDERR.puts "Showing item #{data["actor"].inspect} moving for player #{player.name.inspect}..."
         actor_do.move_for_player(player, data["old_position"], data["new_position"], { "duration" => 0.5 })
       elsif player_loc_name == data["old_location"]
         # The item changed rooms and the player is in the old
