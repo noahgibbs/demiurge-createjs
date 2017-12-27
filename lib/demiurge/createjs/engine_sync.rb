@@ -161,25 +161,25 @@ class Demiurge::Createjs::EngineSync
 
   # When new data comes in about things in the engine changing, this is what receives that notification.
   def notified(data)
-    return if data["type"] == "tick finished"
-    return if data["type"] == "move_from"
-    return if data["type"] == "load_state_start"
+    return if data["type"] == Demiurge::Notifications::TickFinished
+    return if data["type"] == Demiurge::Notifications::MoveFrom
+    return if data["type"] == Demiurge::Notifications::LoadStateStart
 
     # We subscribe to all events in all locations, and the move-from
     # and move-to have the same fields except location, zone and
     # type. So only pay attention to the move_to.
-    if data["type"] == "move_to"
+    if data["type"] == Demiurge::Notifications::MoveTo
       return notified_of_move_to(data)
     end
 
-    if data["type"] == "load_state_end"
+    if data["type"] == Demiurge::Notifications::LoadStateEnd
       @display_objs.each_value do |display_obj|
         display_obj.demiurge_reloaded
       end
       return
     end
 
-    if data["type"] == "intention_cancelled"
+    if data["type"] == Demiurge::Notifications::IntentionCancelled
       acting_item = data["actor"]
       if @players[acting_item]
         # This was a player action that was cancelled
@@ -205,7 +205,7 @@ class Demiurge::Createjs::EngineSync
     end
 
     # This notification will catch new player bodies, instantiated agents and whatnot.
-    if data["type"] == "new item"
+    if data["type"] == Demiurge::Notifications::NewItem
       item = @engine.item_by_name data["actor"]
       register_engine_item(item)
       return
