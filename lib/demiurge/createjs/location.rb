@@ -1,3 +1,5 @@
+require "demiurge/createjs/display_object"
+
 class Demiurge::Createjs::Location < ::Demiurge::Createjs::DisplayObject
   attr_reader :spritesheet
   attr_reader :spritestack
