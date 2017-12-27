@@ -190,6 +190,12 @@ class Demiurge::Createjs::EngineSync
       return
     end
 
+    if data["type"] == Demiurge::Notifications::IntentionApplied
+      # For right now we don't need any kind of confirmations. But
+      # when we do, this is where they come from.
+      return
+    end
+
     if data["type"] == "speech"
       text = data["words"] || "ADD WORDS TO SPEECH NOTIFICATION!"
       speaker = @engine.item_by_name(data["actor"])
@@ -211,7 +217,7 @@ class Demiurge::Createjs::EngineSync
       return
     end
 
-    STDERR.puts "Unhandled notification of type #{data["type"].inspect}..."
+    STDERR.puts "Unhandled notification of type #{data["type"].inspect}...\n#{data.inspect}"
   end
 
   def notified_of_move_to(data)
