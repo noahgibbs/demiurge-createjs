@@ -13,4 +13,4 @@ log/*.txt
 incoming_traffic.json
 outgoing_traffic.json
 node_modules
-test/*_bundle.js
+test/js/*bundle.js
