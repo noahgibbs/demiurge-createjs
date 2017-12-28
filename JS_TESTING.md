@@ -15,8 +15,8 @@ tests using webpack. From there, they can be viewed in a browser to
 run the tests, or cross-browser tested with tools like Sauce Labs.
 
 Right now, start at the root of DCJS's source and run
-test/bundle_and_test.sh and it should bundle up the JavaScript tests
-and (if you're on a Mac) open Google Chrome to check the test.
+test/js/bundle_and_test.sh and it should bundle up the JavaScript
+tests and (if you're on a Mac) open Google Chrome to check the test.
 
 While a local Mac-only browser command isn't terribly useful for
 continuous integration, it should give you a good start if you want to
