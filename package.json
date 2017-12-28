@@ -9,7 +9,8 @@
   },
   "dependencies": {},
   "devDependencies": {
-    "mocha": "^4.0.1"
+    "mocha": "^4.0.1",
+    "webpack": "^3.10.0"
   },
   "scripts": {
     "test": "mocha"
