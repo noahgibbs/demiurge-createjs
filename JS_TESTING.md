@@ -5,6 +5,12 @@ Javascript testing can be challenging in general.
 For cross-browser testing, I started here:
 https://philipwalton.com/articles/learning-how-to-set-up-automated-cross-browser-javascript-unit-testing/
 
+## Installation
+
+You'll need to install Node.js, which includes NPM. And you'll need to
+"npm install" to download the Node modules that are needed for browser
+testing.
+
 ## Browser Testing
 
 Nearly everything DCJS uses Javascript for requires a browser. The
