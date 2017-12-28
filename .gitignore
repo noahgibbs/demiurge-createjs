@@ -12,3 +12,4 @@ log/puma*
 log/*.txt
 incoming_traffic.json
 outgoing_traffic.json
+node_modules

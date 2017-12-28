@@ -1,0 +1,28 @@
+{
+  "name": "demiurge-createjs",
+  "version": "0.1.0",
+  "description": "Demiurge-Createjs (\"DCJS\" for short) provides Websocket-based transport using the Faye library and CreateJS-based display for HTML games to use Demiurge.",
+  "main": "index.js",
+  "directories": {
+    "example": "example",
+    "test": "test"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "mocha": "^4.0.1"
+  },
+  "scripts": {
+    "test": "mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/noahgibbs/demiurge-createjs.git"
+  },
+  "keywords": [],
+  "author": "Noah Gibbs",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/noahgibbs/demiurge-createjs/issues"
+  },
+  "homepage": "https://github.com/noahgibbs/demiurge-createjs#readme"
+}
