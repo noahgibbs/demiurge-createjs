@@ -5,7 +5,16 @@ module.exports = {
     context: __dirname + "/../..",
     target: "web",
     //externals: [ "createjs" ],
-    entry: glob.sync("./test/js/*test.js"),
+    entry: glob.sync("./test/js/*test.js").
+    concat([
+            "./vendor/createjs.js",
+            "./vendor/jquery.js",
+            "./vendor/bcrypt.min.js",
+            "./vendor/reconnecting-websocket.min.js",
+            "./vendor/sha1.min.js"
+            ], [
+                "./dcjs/dcjs.coffee"
+                ]),
     output: {
         filename: "test/js/test_bundle.js"
     },
