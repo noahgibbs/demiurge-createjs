@@ -14,3 +14,5 @@ incoming_traffic.json
 outgoing_traffic.json
 node_modules
 test/js/*bundle.js
+dcjs/dcjs-combined*.js
+dcjs-combined*.js
