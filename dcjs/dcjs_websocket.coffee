@@ -1,7 +1,9 @@
 send_api_message = (wsocket, msg_name, args) ->
 
 class DCJS.WebsocketTransport extends DCJS.Transport
-  constructor: (@dcjs, @ws) ->
+  constructor: (dcjs, @ws) ->
+    super(dcjs)
+    @dcjs = dcjs # Workaround to not reference "this" before calling super
     @opened = false
     @ready = false
     @login_handler = false

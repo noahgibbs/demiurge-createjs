@@ -13,7 +13,13 @@ module.exports = {
             "./vendor/reconnecting-websocket.min.js",
             "./vendor/sha1.min.js"
             ], [
-                "./dcjs/dcjs.coffee"
+                "./dcjs/dcjs.coffee",
+                "./dcjs/dcjs_websocket.coffee",
+                "./dcjs/dcjs_createjs.coffee",
+                "./dcjs/dcjs_createjs_loader.coffee",
+                "./dcjs/dcjs_createjs_spritesheet.coffee",
+                "./dcjs/dcjs_createjs_spritestack.coffee",
+                "./dcjs/dcjs_createjs_text_anim.coffee"
                 ]),
     output: {
         filename: "test/js/test_bundle.js"

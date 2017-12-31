@@ -17,7 +17,9 @@ messageMap = {
 }
 
 class DCJS.CreatejsDisplay extends DCJS.Display
-  constructor: (@dcjs, options = {}) ->
+  constructor: (dcjs, options = {}) ->
+    super(dcjs)
+    @dcjs = dcjs
     @spritesheets = {}
     @spritestacks = {}
 
