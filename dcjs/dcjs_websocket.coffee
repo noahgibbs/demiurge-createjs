@@ -1,9 +1,10 @@
-send_api_message = (wsocket, msg_name, args) ->
-
 class DCJS.WebsocketTransport extends DCJS.Transport
-  constructor: (dcjs, @ws) ->
+  constructor: (dcjs, ws, cookie = document.cookie) ->
     super(dcjs)
     @dcjs = dcjs # Workaround to not reference "this" before calling super
+    @ws = ws
+    @cookie = cookie
+
     @opened = false
     @ready = false
     @login_handler = false
@@ -39,8 +40,8 @@ class DCJS.WebsocketTransport extends DCJS.Transport
       if data[0] == "login"
         console.log "Logged in as", data[1]["username"]
         if @pending_save_login && @pending_hash
-          document.cookie = "dcjs_username=#{data[1]["username"]};secure"
-          document.cookie = "dcjs_hash=#{@pending_hash};secure"
+          @cookie = "dcjs_username=#{data[1]["username"]};secure"
+          @cookie = "dcjs_hash=#{@pending_hash};secure"
           @pending_hash = false
         @logged_in_as = data[1]["username"]
         if @login_handler?
@@ -112,11 +113,11 @@ class DCJS.WebsocketTransport extends DCJS.Transport
     @sendMessageWithType("auth", "get_salt", { username: username })
 
   logout: () ->
-    document.cookie = 'dcjs_username=; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
-    document.cookie = 'dcjs_hash=; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+    @cookie = 'dcjs_username=; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+    @cookie = 'dcjs_hash=; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
 
   considerAutoLogin: () ->
-    cookie_username = document.cookie.replace(/(?:(?:^|.*;\s*)dcjs_username\s*\=\s*([^;]*).*$)|^.*$/, "$1")
-    cookie_hash = document.cookie.replace(/(?:(?:^|.*;\s*)dcjs_hash\s*\=\s*([^;]*).*$)|^.*$/, "$1")
+    cookie_username = @cookie.replace(/(?:(?:^|.*;\s*)dcjs_username\s*\=\s*([^;]*).*$)|^.*$/, "$1")
+    cookie_hash = @cookie.replace(/(?:(?:^|.*;\s*)dcjs_hash\s*\=\s*([^;]*).*$)|^.*$/, "$1")
     if cookie_username? && cookie_hash?
       @sendMessageWithType "auth", "hashed_login", { username: cookie_username, bcrypted: cookie_hash }
