@@ -16,6 +16,7 @@ module.exports = {
 
             // Include test helpers
             "./test/jshelper/cookie_mock.js",
+            "./test/jshelper/websocket_mock.js",
 
             // Include modular, un-minified DCJS to test latest changes
             "./dcjs/dcjs.coffee",

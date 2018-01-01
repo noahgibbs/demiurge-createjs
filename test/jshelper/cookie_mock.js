@@ -1,4 +1,9 @@
-function get_mock_cookie() {
+if(window.Mock === undefined) {
+  window.Mock = {
+  };
+};
+
+window.Mock.get_mock_cookie = function () {
     var mock = {
         value_: '', 
 
