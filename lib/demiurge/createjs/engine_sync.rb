@@ -184,7 +184,7 @@ class Demiurge::Createjs::EngineSync
       if @players[acting_item]
         # This was a player action that was cancelled
         player = @players[acting_item]
-        player.message "displayTextAnimOverStack", player.display_obj.stack_name, data["reason"], "color" => "red", "font" => "20px Arial", "duration" => 3.0
+        player.message "displayTextAnimOverStack", player.display_obj.stack_name, data["reason"], "color" => "#FFCCCC", "font" => "20px Arial", "duration" => 3.0
         return
       end
       return
@@ -204,7 +204,7 @@ class Demiurge::Createjs::EngineSync
       @players.each do |player_name, player|
         player_loc_name = player.display_obj.location_name
         next unless player_loc_name == speaker_loc_name
-        player.message "displayTextAnimOverStack", body.stack_name, text, "color" => data["color"] || "red", "font" => data["font"] || "20px Arial", "duration" => data["duration"] || 5.0
+        player.message "displayTextAnimOverStack", body.stack_name, text, "color" => data["color"] || "#CCCCCC", "font" => data["font"] || "20px Arial", "duration" => data["duration"] || 5.0
       end
       #anim = new window.DCJS.CreatejsDisplay.TextAnim(display.stage, text, { x: pixel_x, y: pixel_y, duration: data["duration"] || 5.0 } );
       return
