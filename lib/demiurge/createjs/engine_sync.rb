@@ -263,7 +263,6 @@ class Demiurge::Createjs::EngineSync
 
       if data["old_location"] == data["new_location"]
         next unless player_loc_name == data["new_location"]
-        STDERR.puts "Showing item #{data["actor"].inspect} moving for player #{player.name.inspect}..."
         actor_do.move_for_player(player, data["old_position"], data["new_position"], { "duration" => 0.5 })
       elsif player_loc_name == data["old_location"]
         # The item changed rooms and the player is in the old
