@@ -1,0 +1,28 @@
+Releases:
+
+* Start properly version tagging and uploading gems
+* Minified and unminified releases w/ source maps, maybe based on "webpack && uglifyjs ./dst/bundle.js -c -m -o ./dst/bundle.min.js --source-map ./dst/bundle.min.js.map" or "https://stackoverflow.com/questions/25956937/how-to-build-minified-and-uncompressed-bundle-with-webpack" (answer by estus w/ multiple entrypoints)
+
+Approachability:
+
+* YARD documentation
+
+Visuals:
+
+* Switch to Pixi/Hexi: https://github.com/kittykatattack/hexi
+
+Interface Overhaul:
+
+* Import lots of Trackless stuff into DCJS - login and logout scaffolding, starting the Demiurge engine, statefile dump/restore
+
+Testing, major setup:
+
+* Cross-browser JS testing: https://philipwalton.com/articles/learning-how-to-set-up-automated-cross-browser-javascript-unit-testing/
+* JavaScript testing of front end w/ message replay
+* Set up a test Ruby-only server and feed JSON into it to make assertions on its reactions
+
+Testing, things to test:
+
+* Test w/ fresh new state from World Files vs reloaded state (e.g. for player creation, w/ fresh body and old body)
+* Test w/ fresh new accounts file versus existing accounts file
+* Test w/ engine state-load while a connection is active
